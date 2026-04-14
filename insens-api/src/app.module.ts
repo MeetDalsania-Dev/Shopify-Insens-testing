@@ -19,10 +19,12 @@ import { DatabaseModule } from './database/database.module';
 // Feature modules
 import { AuthModule }       from './modules/auth/auth.module';
 import { UsersModule }      from './modules/users/users.module';
-import { ShopsModule }      from './modules/shops/shops.module';
+import { VendorsModule }    from './modules/vendors/vendors.module';
 import { ProductsModule }   from './modules/products/products.module';
 import { CategoriesModule } from './modules/categories/categories.module';
 import { AdminModule }      from './modules/admin/admin.module';
+import { CustomersModule }  from './modules/customers/customers.module';
+import { CartModule }       from './modules/cart/cart.module';
 
 @Module({
   imports: [
@@ -33,10 +35,12 @@ import { AdminModule }      from './modules/admin/admin.module';
     DatabaseModule,
     AuthModule,
     UsersModule,
-    ShopsModule,
+    VendorsModule,
     ProductsModule,
     CategoriesModule,
     AdminModule,
+    CustomersModule,
+    CartModule,
   ],
   providers: [
     // Global exception filter — consistent error envelope

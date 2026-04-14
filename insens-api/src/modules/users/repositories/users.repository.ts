@@ -28,7 +28,7 @@ export class UsersRepository {
   async softDelete(id: string) {
     await this.db
       .update(schema.users)
-      .set({ isActive: false, updatedAt: new Date() })
+      .set({ status: 'deleted', updatedAt: new Date() })
       .where(eq(schema.users.id, id));
   }
 }

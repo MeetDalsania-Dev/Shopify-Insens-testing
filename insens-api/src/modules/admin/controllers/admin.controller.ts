@@ -1,5 +1,5 @@
 import { Controller, Get, HttpCode, HttpStatus, Param, Patch, Query, UseGuards } from '@nestjs/common';
-import { ApiTags }    from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from '../services/admin.service';
 import { Roles }        from '../../../core/decorators/roles.decorator';
 import { RolesGuard }   from '../../../core/guards/roles.guard';
@@ -8,7 +8,8 @@ import { UserRole }     from '../../../common/constants/roles.constant';
 @ApiTags('admin')
 @Controller('admin')
 @UseGuards(RolesGuard)
-@Roles(UserRole.INSENS_ADMIN)
+@Roles(UserRole.ADMIN, UserRole.SUPER_ADMIN)
+@ApiBearerAuth()
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
@@ -17,33 +18,32 @@ export class AdminController {
     return this.adminService.getStats();
   }
 
-  // ── Shops ─────────────────────────────────────────────────────────────────
+  // ── Vendors ───────────────────────────────────────────────────────────────
 
-  @Get('shops')
-  listShops(
+  @Get('vendors')
+  listVendors(
     @Query('status') status?: string,
     @Query('page')   page?:   number,
     @Query('limit')  limit?:  number,
   ) {
-    
-    return this.adminService.listShops({ status, page, limit });
+    return this.adminService.listVendors({ status, page, limit });
   }
 
-  @Get('shops/:id')
-  getShop(@Param('id') id: string) {
-    return this.adminService.getShop(id);
+  @Get('vendors/:id')
+  getVendor(@Param('id') id: string) {
+    return this.adminService.getVendor(id);
   }
 
-  @Patch('shops/:id/approve')
+  @Patch('vendors/:id/approve')
   @HttpCode(HttpStatus.OK)
-  approveShop(@Param('id') id: string) {
-    return this.adminService.approveShop(id);
+  approveVendor(@Param('id') id: string) {
+    return this.adminService.approveVendor(id);
   }
 
-  @Patch('shops/:id/suspend')
+  @Patch('vendors/:id/suspend')
   @HttpCode(HttpStatus.OK)
-  suspendShop(@Param('id') id: string) {
-    return this.adminService.suspendShop(id);
+  suspendVendor(@Param('id') id: string) {
+    return this.adminService.suspendVendor(id);
   }
 
   // ── Users ─────────────────────────────────────────────────────────────────

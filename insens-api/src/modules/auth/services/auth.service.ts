@@ -11,6 +11,7 @@ import * as crypto       from 'crypto';
 import { AuthRepository } from '../repositories/auth.repository';
 import { RegisterDto }    from '../dtos/register.dto';
 import { LoginDto }       from '../dtos/login.dto';
+import { UserRole }       from '../../../common/constants/roles.constant';
 import type { JwtPayload }     from '../../../common/interfaces/jwt-payload.interface';
 
 @Injectable()
@@ -32,14 +33,28 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
     const user = await this.authRepo.createUser({
-      email:     dto.email,
-      password:  passwordHash,
-      role:      dto.role,
+      email:           dto.email,
+      passwordHash,
+      authProvider:    'local',
+      status:          'active',
+      isEmailVerified: false,
+      isPhoneVerified: false,
+    });
+
+    // Create profile if names provided
+    await this.authRepo.createProfile({
+      userId:    user.id,
       firstName: dto.firstName ?? null,
       lastName:  dto.lastName  ?? null,
     });
 
-    return this.issueTokens(user.id, user.email, user.role as any, null);
+    // Auto-assign `customer` role
+    const customerRole = await this.authRepo.findRoleByCode(UserRole.CUSTOMER);
+    if (customerRole) {
+      await this.authRepo.assignRole(user.id, customerRole.id);
+    }
+
+    return this.issueTokens(user.id, user.email!, [UserRole.CUSTOMER], null);
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
@@ -54,7 +69,14 @@ export class AuthService {
       });
     }
 
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+    if (!user.passwordHash) {
+      throw new UnauthorizedException({
+        code:    'AUTH_INVALID_CREDENTIALS',
+        message: 'Invalid email or password',
+      });
+    }
+
+    const passwordMatch = await bcrypt.compare(dto.password, user.passwordHash);
     if (!passwordMatch) {
       throw new UnauthorizedException({
         code:    'AUTH_INVALID_CREDENTIALS',
@@ -62,17 +84,22 @@ export class AuthService {
       });
     }
 
-    if (!user.isActive) {
+    if (user.status === 'suspended' || user.status === 'deleted') {
       throw new ForbiddenException({
         code:    'FORBIDDEN',
         message: 'Your account has been deactivated',
       });
     }
 
-    // Resolve shopId for SHOP_OWNER from the shops table (handled in auth module via repo)
-    const shopId = (user as any).shopId ?? null;
+    // Lookup roles and vendorId in parallel
+    const [roles, vendorId] = await Promise.all([
+      this.authRepo.getUserRoleCodes(user.id),
+      this.authRepo.getVendorIdForUser(user.id),
+    ]);
 
-    return this.issueTokens(user.id, user.email, user.role as any, shopId);
+    await this.authRepo.updateLastLogin(user.id);
+
+    return this.issueTokens(user.id, user.email!, roles, vendorId);
   }
 
   // ── Refresh ───────────────────────────────────────────────────────────────
@@ -97,7 +124,7 @@ export class AuthService {
     // Rotate: delete old token, issue new pair
     await this.authRepo.deleteRefreshToken(storedToken.id);
 
-    return this.issueTokens(payload.sub, payload.email, payload.role, payload.shopId);
+    return this.issueTokens(payload.sub, payload.email, payload.roles, payload.vendorId);
   }
 
   // ── Logout ────────────────────────────────────────────────────────────────
@@ -118,23 +145,37 @@ export class AuthService {
   // ── Me ────────────────────────────────────────────────────────────────────
 
   async getMe(userId: string) {
-    const user = await this.authRepo.findUserById(userId);
+    const [user, profile, roles, vendorId] = await Promise.all([
+      this.authRepo.findUserById(userId),
+      this.authRepo.findProfile(userId),
+      this.authRepo.getUserRoleCodes(userId),
+      this.authRepo.getVendorIdForUser(userId),
+    ]);
+
     if (!user) {
       throw new UnauthorizedException({ code: 'AUTH_TOKEN_INVALID', message: 'User not found' });
     }
-    const { password: _pw, ...safe } = user;
-    return safe;
+
+    const { passwordHash: _pw, ...safeUser } = user;
+
+    return {
+      ...safeUser,
+      firstName: profile?.firstName ?? null,
+      lastName:  profile?.lastName  ?? null,
+      roles,
+      vendorId,
+    };
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
 
   private async issueTokens(
-    userId:  string,
-    email:   string,
-    role:    JwtPayload['role'],
-    shopId:  string | null,
+    userId:   string,
+    email:    string,
+    roles:    string[],
+    vendorId: string | null,
   ) {
-    const payload: Omit<JwtPayload, 'iat' | 'exp'> = { sub: userId, email, role, shopId };
+    const payload: Omit<JwtPayload, 'iat' | 'exp'> = { sub: userId, email, roles, vendorId };
 
     const accessExpiresIn  = this.configService.get<string>('jwt.accessExpiresIn',  '15m');
     const refreshExpiresIn = this.configService.get<string>('jwt.refreshExpiresIn', '7d');
@@ -148,7 +189,10 @@ export class AuthService {
 
     await this.authRepo.createRefreshToken({ userId, tokenHash, expiresAt });
 
-    const user = await this.authRepo.findUserById(userId);
+    const [user, profile] = await Promise.all([
+      this.authRepo.findUserById(userId),
+      this.authRepo.findProfile(userId),
+    ]);
 
     return {
       accessToken,
@@ -156,10 +200,10 @@ export class AuthService {
       user: {
         id:        user!.id,
         email:     user!.email,
-        role:      user!.role,
-        firstName: user!.firstName,
-        lastName:  user!.lastName,
-        shopId,
+        firstName: profile?.firstName ?? null,
+        lastName:  profile?.lastName  ?? null,
+        roles,
+        vendorId,
       },
     };
   }
@@ -169,7 +213,7 @@ export class AuthService {
   }
 
   private parseExpiry(duration: string): Date {
-    const now = Date.now();
+    const now  = Date.now();
     const unit = duration.slice(-1);
     const val  = parseInt(duration.slice(0, -1), 10);
     const ms: Record<string, number> = { m: 60_000, h: 3_600_000, d: 86_400_000 };

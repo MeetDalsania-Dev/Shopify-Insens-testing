@@ -17,6 +17,8 @@ export function useLogin() {
       redirect: false,
     });
     setLoading(false);
+    console.log(result);
+    
     if (result?.ok) {
       router.push('/dashboard');
     } else {

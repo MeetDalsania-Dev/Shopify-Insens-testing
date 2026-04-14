@@ -15,6 +15,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<FastifyReply>();
     const request  = ctx.getRequest<FastifyRequest>();
 
+    // Guard: if Fastify has already sent the response, do nothing
+    if (response.sent) return;
+
     const status =
       exception instanceof HttpException
         ? exception.getStatus()
@@ -31,7 +34,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       const res = exceptionResponse as Record<string, unknown>;
       code    = (res['code']    as string)  ?? mapStatusToCode(status);
       message = (res['message'] as string)  ?? message;
-      details = (res['details'] as Record<string, unknown>) ?? {};
+
+      // Validation errors: NestJS puts them in `message` array
+      if (Array.isArray(res['message'])) {
+        message = 'Validation failed';
+        details = { errors: res['message'] };
+        code    = 'VALIDATION_ERROR';
+      } else {
+        details = (res['details'] as Record<string, unknown>) ?? {};
+      }
     } else if (typeof exceptionResponse === 'string') {
       message = exceptionResponse;
       code    = mapStatusToCode(status);
@@ -58,6 +69,7 @@ function mapStatusToCode(status: number): string {
     403: 'FORBIDDEN',
     404: 'RESOURCE_NOT_FOUND',
     409: 'CONFLICT',
+    422: 'UNPROCESSABLE',
     500: 'INTERNAL_ERROR',
   };
   return map[status] ?? 'INTERNAL_ERROR';

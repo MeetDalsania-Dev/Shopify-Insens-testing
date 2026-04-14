@@ -18,15 +18,16 @@ const handler = NextAuth({
           );
 
           const { data } = res.data;
+        
 
-          if (data.user.role !== 'INSENS_ADMIN') {
+          if (data.user.roles[0] !== 'admin') {
             throw new Error('FORBIDDEN');
           }
 
           return {
             id: data.user.id,
             email: data.user.email,
-            role: data.user.role,
+            role: data.user.roles[0],
             accessToken: data.accessToken,
             refreshToken: data.refreshToken,
           };
@@ -39,6 +40,7 @@ const handler = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        
         token.accessToken = (user as any).accessToken;
         token.refreshToken = (user as any).refreshToken;
         token.role = (user as any).role;
@@ -46,8 +48,10 @@ const handler = NextAuth({
       return token;
     },
     async session({ session, token }) {
+      
       (session as any).accessToken = token.accessToken as string;
       (session as any).role = token.role as string;
+     
       return session;
     },
   },

@@ -1,24 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable }     from '@nestjs/common';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, asc, count, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, eq, sql }   from 'drizzle-orm';
 import * as schema        from '../../../database/schema';
 import { InjectDatabase } from '../../../database/database.decorator';
-import { getOffset, normalizePagination } from '../../../common/helpers/pagination.helper';
 
 export interface ProductFilters {
-  shopId?:      string;
+  vendorId?:    string;
   categoryId?:  string;
-  minPrice?:    number;
-  maxPrice?:    number;
+  brandId?:     string;
+  status?:      string;
   page?:        number;
   limit?:       number;
-  sortBy?:      'price' | 'createdAt';
-  order?:       'asc' | 'desc';
 }
 
 @Injectable()
 export class ProductsRepository {
   constructor(@InjectDatabase() private readonly db: NodePgDatabase<typeof schema>) {}
+
+  // ── Products ──────────────────────────────────────────────────────────────
 
   async create(data: schema.NewProduct) {
     const [product] = await this.db.insert(schema.products).values(data).returning();
@@ -28,36 +27,50 @@ export class ProductsRepository {
   async findById(id: string) {
     return this.db.query.products.findFirst({
       where: eq(schema.products.id, id),
-      with:  { shop: true, category: true },
-    } as any);
+    });
+  }
+
+  async findByIdWithVariants(id: string) {
+    const product = await this.db.query.products.findFirst({
+      where: eq(schema.products.id, id),
+    });
+
+    if (!product) return null;
+
+    const variants = await this.db.query.productVariants.findMany({
+      where: eq(schema.productVariants.productId, id),
+    });
+
+    return { ...product, variants };
   }
 
   async findAll(filters: ProductFilters) {
-    const { page, limit } = normalizePagination(filters);
-    const offset          = getOffset(page, limit);
+    const page   = filters.page  ?? 1;
+    const limit  = filters.limit ?? 20;
+    const offset = (page - 1) * limit;
 
-    const conditions = [eq(schema.products.isActive, true)];
-    if (filters.shopId)     conditions.push(eq(schema.products.shopId,     filters.shopId));
+    const conditions: ReturnType<typeof eq>[] = [];
+    if (filters.vendorId)   conditions.push(eq(schema.products.vendorId,   filters.vendorId));
     if (filters.categoryId) conditions.push(eq(schema.products.categoryId, filters.categoryId));
-    if (filters.minPrice)   conditions.push(gte(schema.products.price,     String(filters.minPrice)));
-    if (filters.maxPrice)   conditions.push(lte(schema.products.price,     String(filters.maxPrice)));
+    if (filters.brandId)    conditions.push(eq(schema.products.brandId,    filters.brandId));
+    if (filters.status)     conditions.push(eq(schema.products.status,     filters.status as any));
 
-    const where     = and(...conditions);
-    const orderDir  = filters.order === 'asc' ? asc : desc;
-    const orderCol  = filters.sortBy === 'price' ? schema.products.price : schema.products.createdAt;
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [items, [{ value: total }]] = await Promise.all([
-      this.db.query.products.findMany({
-        where,
-        limit,
-        offset,
-        orderBy: orderDir(orderCol),
-        with:    { category: true },
-      } as any),
-      this.db.select({ value: count() }).from(schema.products).where(where),
+    const [items, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(schema.products)
+        .where(whereClause)
+        .limit(limit)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.products)
+        .where(whereClause),
     ]);
 
-    return { items, total: Number(total), page, limit };
+    return { items, total: count, page, limit };
   }
 
   async update(id: string, data: Partial<schema.NewProduct>) {
@@ -69,10 +82,37 @@ export class ProductsRepository {
     return product;
   }
 
-  async softDelete(id: string) {
+  // ── Variants ──────────────────────────────────────────────────────────────
+
+  async createVariant(data: schema.NewProductVariant) {
+    const [variant] = await this.db.insert(schema.productVariants).values(data).returning();
+    return variant;
+  }
+
+  async findVariantById(id: string) {
+    return this.db.query.productVariants.findFirst({
+      where: eq(schema.productVariants.id, id),
+    });
+  }
+
+  async findVariantsByProductId(productId: string) {
+    return this.db.query.productVariants.findMany({
+      where: eq(schema.productVariants.productId, productId),
+    });
+  }
+
+  async updateVariant(id: string, data: Partial<schema.NewProductVariant>) {
+    const [variant] = await this.db
+      .update(schema.productVariants)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.productVariants.id, id))
+      .returning();
+    return variant;
+  }
+
+  async deleteVariant(id: string) {
     await this.db
-      .update(schema.products)
-      .set({ isActive: false, updatedAt: new Date() })
-      .where(eq(schema.products.id, id));
+      .delete(schema.productVariants)
+      .where(eq(schema.productVariants.id, id));
   }
 }

@@ -1,6 +1,5 @@
-import { Injectable, Logger, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { AdminRepository, AdminShopFilters, AdminUserFilters } from '../repositories/admin.repository';
-import { buildPaginationMeta } from '../../../common/helpers/pagination.helper';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { AdminRepository, AdminVendorFilters, AdminUserFilters } from '../repositories/admin.repository';
 
 @Injectable()
 export class AdminService {
@@ -10,55 +9,68 @@ export class AdminService {
     return this.adminRepo.getStats();
   }
 
-  async listShops(filters: AdminShopFilters) {
-    console.log('[AdminService] listShops items');
-    const { items, total, page, limit } = await this.adminRepo.findAllShops(filters);
-    
-    return buildPaginationMeta(items, total, page, limit);
+  // ── Vendors ───────────────────────────────────────────────────────────────
+
+  async listVendors(filters: AdminVendorFilters) {
+    const { items, total, page, limit } = await this.adminRepo.findAllVendors(filters);
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
-  async getShop(id: string) {
-    const shop = await this.adminRepo.findShopById(id);
-    if (!shop) throw new NotFoundException({ code: 'RESOURCE_NOT_FOUND', message: 'Shop not found' });
-    return shop;
+  async getVendor(id: string) {
+    const vendor = await this.adminRepo.findVendorById(id);
+    if (!vendor) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Vendor not found' });
+    return vendor;
   }
 
-  async approveShop(id: string) {
-    const shop = await this.adminRepo.findShopById(id);
-    if (!shop) throw new NotFoundException({ code: 'RESOURCE_NOT_FOUND', message: 'Shop not found' });
+  async approveVendor(id: string) {
+    const vendor = await this.adminRepo.findVendorById(id);
+    if (!vendor) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Vendor not found' });
 
-    if ((shop as any).status === 'APPROVED') {
-      throw new UnprocessableEntityException({ code: 'CONFLICT', message: 'Shop is already approved' });
-    }
-
-    return this.adminRepo.updateShopStatus(id, 'APPROVED');
+    return this.adminRepo.updateVendor(id, {
+      approvalStatus: 'approved',
+      status:         'active',
+      approvedAt:     new Date(),
+    });
   }
 
-  async suspendShop(id: string) {
-    const shop = await this.adminRepo.findShopById(id);
-    if (!shop) throw new NotFoundException({ code: 'RESOURCE_NOT_FOUND', message: 'Shop not found' });
+  async suspendVendor(id: string) {
+    const vendor = await this.adminRepo.findVendorById(id);
+    if (!vendor) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Vendor not found' });
 
-    if ((shop as any).status === 'SUSPENDED') {
-      throw new UnprocessableEntityException({ code: 'CONFLICT', message: 'Shop is already suspended' });
-    }
-
-    return this.adminRepo.updateShopStatus(id, 'SUSPENDED');
+    return this.adminRepo.updateVendor(id, {
+      status:      'suspended',
+      suspendedAt: new Date(),
+    });
   }
+
+  // ── Users ─────────────────────────────────────────────────────────────────
 
   async listUsers(filters: AdminUserFilters) {
     const { items, total, page, limit } = await this.adminRepo.findAllUsers(filters);
-    return buildPaginationMeta(items, total, page, limit);
+    return {
+      items,
+      total,
+      page,
+      limit,
+      totalPages: Math.ceil(total / limit),
+    };
   }
 
   async getUser(id: string) {
     const user = await this.adminRepo.findUserById(id);
-    if (!user) throw new NotFoundException({ code: 'RESOURCE_NOT_FOUND', message: 'User not found' });
+    if (!user) throw new NotFoundException({ code: 'NOT_FOUND', message: 'User not found' });
     return user;
   }
 
   async deactivateUser(id: string) {
     const user = await this.adminRepo.findUserById(id);
-    if (!user) throw new NotFoundException({ code: 'RESOURCE_NOT_FOUND', message: 'User not found' });
-    return this.adminRepo.deactivateUser(id);
+    if (!user) throw new NotFoundException({ code: 'NOT_FOUND', message: 'User not found' });
+    return this.adminRepo.suspendUser(id);
   }
 }

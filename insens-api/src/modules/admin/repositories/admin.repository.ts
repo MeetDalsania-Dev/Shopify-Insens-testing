@@ -1,11 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable }     from '@nestjs/common';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { and, count, eq, ilike } from 'drizzle-orm';
+import { eq, sql }        from 'drizzle-orm';
 import * as schema        from '../../../database/schema';
 import { InjectDatabase } from '../../../database/database.decorator';
-import { getOffset, normalizePagination } from '../../../common/helpers/pagination.helper';
 
-export interface AdminShopFilters {
+export interface AdminVendorFilters {
   status?: string;
   page?:   number;
   limit?:  number;
@@ -23,95 +22,132 @@ export class AdminRepository {
   // ── Stats ────────────────────────────────────────────────────────────────
 
   async getStats() {
-    const [buyers, pending, approved, suspended, products] = await Promise.all([
-      this.db.select({ value: count() }).from(schema.users).where(eq(schema.users.role, 'BUYER')),
-      this.db.select({ value: count() }).from(schema.shops).where(eq(schema.shops.status, 'PENDING')),
-      this.db.select({ value: count() }).from(schema.shops).where(eq(schema.shops.status, 'APPROVED')),
-      this.db.select({ value: count() }).from(schema.shops).where(eq(schema.shops.status, 'SUSPENDED')),
-      this.db.select({ value: count() }).from(schema.products).where(eq(schema.products.isActive, true)),
+    const [
+      totalUsersRes,
+      pendingVendorsRes,
+      activeVendorsRes,
+      suspendedVendorsRes,
+      totalProductsRes,
+    ] = await Promise.all([
+      this.db.select({ count: sql<number>`count(*)::int` }).from(schema.users),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.vendors)
+        .where(eq(schema.vendors.status, 'pending')),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.vendors)
+        .where(eq(schema.vendors.status, 'active')),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.vendors)
+        .where(eq(schema.vendors.status, 'suspended')),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(schema.products),
     ]);
 
     return {
-      totalBuyers:          Number(buyers[0].value),
-      totalShops:           Number(pending[0].value) + Number(approved[0].value) + Number(suspended[0].value),
-      totalPendingShops:    Number(pending[0].value),
-      totalApprovedShops:   Number(approved[0].value),
-      totalSuspendedShops:  Number(suspended[0].value),
-      totalProducts:        Number(products[0].value),
+      totalUsers:           totalUsersRes[0].count,
+      totalVendors:         pendingVendorsRes[0].count + activeVendorsRes[0].count + suspendedVendorsRes[0].count,
+      totalPendingVendors:  pendingVendorsRes[0].count,
+      totalActiveVendors:   activeVendorsRes[0].count,
+      totalSuspendedVendors: suspendedVendorsRes[0].count,
+      totalProducts:        totalProductsRes[0].count,
     };
   }
 
-  // ── Shops ─────────────────────────────────────────────────────────────────
+  // ── Vendors ───────────────────────────────────────────────────────────────
 
-  async findAllShops(filters: AdminShopFilters) {
-    const { page, limit } = normalizePagination(filters);
-    const offset          = getOffset(page, limit);
-    const conditions = filters.status ? [eq(schema.shops.status, filters.status as any)] : [];
-    const where      = conditions.length ? and(...conditions) : undefined;
-    
-    const [items, [{ value: total }]] = await Promise.all([
-      this.db.query.shops.findMany({
-        where,
-        limit,
-        offset,
-        with: { owner: { columns: { id: true, email: true, firstName: true, lastName: true } } },
-      } as any),
-      this.db.select({ value: count() }).from(schema.shops).where(where),
+  async findAllVendors(filters: AdminVendorFilters) {
+    const page   = filters.page  ?? 1;
+    const limit  = filters.limit ?? 20;
+    const offset = (page - 1) * limit;
+
+    const whereClause = filters.status
+      ? eq(schema.vendors.status, filters.status as any)
+      : undefined;
+
+    const [items, [{ count }]] = await Promise.all([
+      this.db
+        .select()
+        .from(schema.vendors)
+        .where(whereClause)
+        .limit(limit)
+        .offset(offset),
+      this.db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(schema.vendors)
+        .where(whereClause),
     ]);
-    
 
-    return { items, total: Number(total), page, limit };
+    return { items, total: count, page, limit };
   }
 
-  async findShopById(id: string) {
-    return this.db.query.shops.findFirst({
-      where: eq(schema.shops.id, id),
-      with:  { owner: { columns: { id: true, email: true, firstName: true, lastName: true } } },
-    } as any);
+  async findVendorById(id: string) {
+    return this.db.query.vendors.findFirst({
+      where: eq(schema.vendors.id, id),
+    });
   }
 
-  async updateShopStatus(id: string, status: 'APPROVED' | 'SUSPENDED') {
-    const [shop] = await this.db
-      .update(schema.shops)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(schema.shops.id, id))
+  async updateVendor(id: string, data: Partial<schema.NewVendor>) {
+    const [vendor] = await this.db
+      .update(schema.vendors)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(schema.vendors.id, id))
       .returning();
-    return shop;
+    return vendor;
   }
 
   // ── Users ─────────────────────────────────────────────────────────────────
 
   async findAllUsers(filters: AdminUserFilters) {
-    const { page, limit } = normalizePagination(filters);
-    const offset          = getOffset(page, limit);
+    const page   = filters.page  ?? 1;
+    const limit  = filters.limit ?? 20;
+    const offset = (page - 1) * limit;
 
-    const [items, [{ value: total }]] = await Promise.all([
-      this.db.query.users.findMany({ limit, offset }),
-      this.db.select({ value: count() }).from(schema.users),
+    const [items, [{ count }]] = await Promise.all([
+      this.db
+        .select({
+          id:              schema.users.id,
+          email:           schema.users.email,
+          status:          schema.users.status,
+          authProvider:    schema.users.authProvider,
+          isEmailVerified: schema.users.isEmailVerified,
+          createdAt:       schema.users.createdAt,
+        })
+        .from(schema.users)
+        .limit(limit)
+        .offset(offset),
+      this.db.select({ count: sql<number>`count(*)::int` }).from(schema.users),
     ]);
 
-    return {
-      items: items.map(({ password: _pw, ...u }) => u),
-      total: Number(total),
-      page,
-      limit,
-    };
+    return { items, total: count, page, limit };
   }
 
   async findUserById(id: string) {
-    const user = await this.db.query.users.findFirst({ where: eq(schema.users.id, id) });
-    if (!user) return null;
-    const { password: _pw, ...safe } = user;
-    return safe;
+    return this.db
+      .select({
+        id:              schema.users.id,
+        email:           schema.users.email,
+        status:          schema.users.status,
+        authProvider:    schema.users.authProvider,
+        isEmailVerified: schema.users.isEmailVerified,
+        createdAt:       schema.users.createdAt,
+      })
+      .from(schema.users)
+      .where(eq(schema.users.id, id))
+      .then((rows) => rows[0] ?? null);
   }
 
-  async deactivateUser(id: string) {
+  async suspendUser(id: string) {
     const [user] = await this.db
       .update(schema.users)
-      .set({ isActive: false, updatedAt: new Date() })
+      .set({ status: 'suspended', updatedAt: new Date() })
       .where(eq(schema.users.id, id))
-      .returning();
-    const { password: _pw, ...safe } = user;
-    return safe;
+      .returning({
+        id:     schema.users.id,
+        email:  schema.users.email,
+        status: schema.users.status,
+      });
+    return user;
   }
 }

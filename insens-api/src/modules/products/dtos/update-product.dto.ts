@@ -1,37 +1,28 @@
-import {
-  IsArray, IsBoolean, IsInt, IsNumber, IsOptional, IsString, IsUrl, IsUUID, Min, MinLength,
-} from 'class-validator';
+import { IsIn, IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
 export class UpdateProductDto {
   @IsString()
-  @MinLength(2)
+  @MaxLength(255)
   @IsOptional()
-  name?: string;
+  title?: string;
+
+  @IsString()
+  @IsOptional()
+  shortDescription?: string;
 
   @IsString()
   @IsOptional()
   description?: string;
 
-  @IsNumber()
-  @Min(0)
+  @IsIn(['draft', 'pending_review', 'active', 'archived'])
   @IsOptional()
-  price?: number;
-
-  @IsInt()
-  @Min(0)
-  @IsOptional()
-  stock?: number;
+  status?: string;
 
   @IsUUID()
   @IsOptional()
   categoryId?: string;
 
-  @IsArray()
-  @IsUrl({}, { each: true })
+  @IsUUID()
   @IsOptional()
-  images?: string[];
-
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean;
+  brandId?: string;
 }

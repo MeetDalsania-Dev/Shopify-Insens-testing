@@ -9,7 +9,7 @@ export class UsersService {
   async getMe(userId: string) {
     const user = await this.usersRepo.findById(userId);
     if (!user) throw new NotFoundException({ code: 'RESOURCE_NOT_FOUND', message: 'User not found' });
-    const { password: _pw, ...safe } = user;
+    const { passwordHash: _pw, ...safe } = user;
     return safe;
   }
 
@@ -21,7 +21,7 @@ export class UsersService {
       }
     }
     const updated = await this.usersRepo.update(userId, dto);
-    const { password: _pw, ...safe } = updated;
+    const { passwordHash: _pw, ...safe } = updated;
     return safe;
   }
 
