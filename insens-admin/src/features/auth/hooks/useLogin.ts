@@ -21,6 +21,7 @@ export function useLogin() {
     
     if (result?.ok) {
       router.push('/dashboard');
+      router.refresh();
     } else {
       setError('Invalid email or password');
     }

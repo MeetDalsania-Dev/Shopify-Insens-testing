@@ -4,11 +4,11 @@ export interface LoginPayload {
 }
 
 export interface RegisterPayload {
-  email:     string;
-  password:  string;
+  email: string;
+  password: string;
   firstName: string;
   lastName?: string;
-  role:      "SHOP_OWNER";
+  role: "vendor_owner";
 }
 
 export interface AuthUser {

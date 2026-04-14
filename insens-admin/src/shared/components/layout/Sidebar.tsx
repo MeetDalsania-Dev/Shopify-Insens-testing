@@ -2,17 +2,38 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Store, Users, UserCircle, X, Gem } from 'lucide-react';
+import { LayoutDashboard, Store, Users, UserCircle, X, Gem, ClipboardList, ShieldCheck } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useUiStore } from '@/shared/state/ui.store';
 import { Button } from '@/shared/components/ui/button';
 import { Separator } from '@/shared/components/ui/separator';
 
-const navItems = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Shops', href: '/shops', icon: Store },
-  { label: 'Users', href: '/users', icon: Users },
-  { label: 'Profile', href: '/profile', icon: UserCircle },
+const navGroups = [
+  {
+    label: 'Overview',
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Vendors',
+    items: [
+      { label: 'Requests', href: '/requests', icon: ClipboardList },
+      { label: 'Vendors', href: '/vendors', icon: ShieldCheck },
+    ],
+  },
+  {
+    label: 'Platform',
+    items: [
+      { label: 'Users', href: '/users', icon: Users },
+    ],
+  },
+  {
+    label: 'Account',
+    items: [
+      { label: 'Profile', href: '/profile', icon: UserCircle },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -60,31 +81,37 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
-            Navigation
-          </p>
-          {navItems.map((item) => {
-            const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
-                  isActive
-                    ? 'bg-primary/10 text-primary border border-primary/20'
-                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
-                )}
-              >
-                <item.icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
-                {item.label}
-                {isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-3 py-4 overflow-y-auto space-y-5">
+          {navGroups.map((group) => (
+            <div key={group.label}>
+              <p className="px-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">
+                {group.label}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map((item) => {
+                  const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150',
+                        isActive
+                          ? 'bg-primary/10 text-primary border border-primary/20'
+                          : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                      )}
+                    >
+                      <item.icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
+                      {item.label}
+                      {isActive && (
+                        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-primary" />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}

@@ -22,15 +22,16 @@ export function useRegister() {
         password:  values.password,
         firstName: values.firstName,
         lastName:  values.lastName,
-        role:      "SHOP_OWNER",
+        role:      "vendor_owner",
       });
-
+      
       // 2. Automatically sign in after registration
       const result = await signIn("credentials", {
         email:    values.email,
         password: values.password,
         redirect: false,
       });
+      console.log("login seller",result);
 
       if (result?.error) {
         toast.error("Account created", "Please sign in with your new credentials.");
