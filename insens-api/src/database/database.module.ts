@@ -1,0 +1,23 @@
+import { Module, Global } from '@nestjs/common';
+import { ConfigService }  from '@nestjs/config';
+import { Pool }           from 'pg';
+import { drizzle }        from 'drizzle-orm/node-postgres';
+import * as schema        from './schema';
+
+export const DATABASE_TOKEN = 'DATABASE';
+
+@Global()
+@Module({
+  providers: [
+    {
+      provide:    DATABASE_TOKEN,
+      inject:     [ConfigService],
+      useFactory: (config: ConfigService) => {
+        const pool = new Pool({ connectionString: config.get<string>('database.url') });
+        return drizzle(pool, { schema });
+      },
+    },
+  ],
+  exports: [DATABASE_TOKEN],
+})
+export class DatabaseModule {}

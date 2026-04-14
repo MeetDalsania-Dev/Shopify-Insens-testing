@@ -1,0 +1,18 @@
+import { pgTable, uuid, varchar, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { userRoleEnum } from './enums';
+
+export const users = pgTable('users', {
+  id:        uuid('id').primaryKey().defaultRandom(),
+  email:     varchar('email', { length: 255 }).notNull().unique(),
+  password:  varchar('password', { length: 255 }).notNull(),
+  role:      userRoleEnum('role').notNull().default('BUYER'),
+  firstName: varchar('first_name', { length: 100 }),
+  lastName:  varchar('last_name', { length: 100 }),
+  avatarUrl: varchar('avatar_url', { length: 500 }),
+  isActive:  boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+export type User      = typeof users.$inferSelect;
+export type NewUser   = typeof users.$inferInsert;

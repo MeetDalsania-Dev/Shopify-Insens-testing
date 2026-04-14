@@ -1,0 +1,1412 @@
+{
+  "info": {
+    "_postman_id": "insens-api-collection-v1",
+    "name": "Insens Perfume Marketplace API",
+    "description": "Complete API collection for the Insens perfume marketplace backend.\n\n## Setup\n1. Set `baseUrl` variable to your server (default: http://localhost:3000)\n2. Run **Register as Buyer**, **Register as Shop Owner**, and **Register as Admin** (or seed DB) to get accounts\n3. Use the **Login** requests — access/refresh tokens are auto-saved to collection variables\n4. Tokens are automatically injected into all protected requests via collection-level auth\n\n## Auto-managed variables\n- `accessToken` — saved on every login/refresh\n- `refreshToken` — saved on every login/refresh\n- `adminAccessToken` — saved on admin login\n- `shopOwnerId` — saved after shop owner login\n- `shopId` — saved after shop creation\n- `productId` — saved after product creation\n- `categoryId` — saved after listing categories\n- `userId` — saved after login",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",           "value": "http://localhost:3000",  "type": "string" },
+    { "key": "apiPrefix",         "value": "/api/v1",               "type": "string" },
+    { "key": "accessToken",       "value": "",                      "type": "string" },
+    { "key": "refreshToken",      "value": "",                      "type": "string" },
+    { "key": "adminAccessToken",  "value": "",                      "type": "string" },
+    { "key": "adminRefreshToken", "value": "",                      "type": "string" },
+    { "key": "shopId",            "value": "",                      "type": "string" },
+    { "key": "productId",         "value": "",                      "type": "string" },
+    { "key": "categoryId",        "value": "",                      "type": "string" },
+    { "key": "userId",            "value": "",                      "type": "string" },
+    { "key": "targetShopId",      "value": "",                      "type": "string" },
+    { "key": "targetUserId",      "value": "",                      "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{accessToken}}", "type": "string" }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// ─── Collection-level Pre-Request Script ────────────────────────────",
+          "// Logs the outgoing request for easier debugging",
+          "console.log(`[PRE] ${pm.request.method} ${pm.request.url.toString()}`);",
+          "",
+          "// Warn if accessToken is empty for non-public requests",
+          "const publicPaths = ['/auth/register', '/auth/login', '/auth/refresh',",
+          "                     '/shops', '/products', '/categories'];",
+          "const url = pm.request.url.toString();",
+          "const isPublicGet = pm.request.method === 'GET' && publicPaths.some(p => url.includes(p));",
+          "const isAuthEndpoint = url.includes('/auth/register') || url.includes('/auth/login') || url.includes('/auth/refresh');",
+          "if (!isPublicGet && !isAuthEndpoint && !pm.collectionVariables.get('accessToken')) {",
+          "    console.warn('[PRE] ⚠ accessToken is empty — this request may return 401');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// ─── Collection-level Test Script ───────────────────────────────────",
+          "// Assert response time is acceptable",
+          "pm.test('Response time < 3000ms', () => {",
+          "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+          "});",
+          "",
+          "// Log response status for every request",
+          "console.log(`[POST] ${pm.response.status} (${pm.response.responseTime}ms)`);"
+        ]
+      }
+    }
+  ],
+  "item": [
+
+    
+    {
+      "name": "🔐 Auth",
+      "item": [
+
+        {
+          "name": "Register — Buyer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Generate a unique email each run to avoid conflicts",
+                  "const ts = Date.now();",
+                  "pm.variables.set('buyerEmail', `buyer_${ts}@test.com`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Response has tokens', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('accessToken');",
+                  "    pm.expect(json).to.have.property('refreshToken');",
+                  "    pm.expect(json.user.role).to.eql('BUYER');",
+                  "    // Save tokens",
+                  "    pm.collectionVariables.set('accessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "    pm.collectionVariables.set('userId',       json.user.id);",
+                  "    console.log('[AUTH] Buyer registered, tokens saved.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{buyerEmail}}\",\n  \"password\": \"Password123!\",\n  \"role\": \"BUYER\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"Buyer\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/register", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "register"] }
+          }
+        },
+
+        {
+          "name": "Register — Shop Owner",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const ts = Date.now();",
+                  "pm.variables.set('shopOwnerEmail', `owner_${ts}@test.com`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Role is SHOP_OWNER', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.user.role).to.eql('SHOP_OWNER');",
+                  "    pm.collectionVariables.set('accessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "    pm.collectionVariables.set('userId',       json.user.id);",
+                  "    console.log('[AUTH] Shop owner registered, tokens saved.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{shopOwnerEmail}}\",\n  \"password\": \"Password123!\",\n  \"role\": \"SHOP_OWNER\",\n  \"firstName\": \"Ahmed\",\n  \"lastName\": \"Owner\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/register", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "register"] }
+          }
+        },
+
+        {
+          "name": "Login — Buyer",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Update email below to match a registered buyer account",
+                  "console.log('[AUTH] Logging in as buyer...');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Tokens received and saved', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.accessToken).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.refreshToken).to.be.a('string').and.not.empty;",
+                  "    pm.collectionVariables.set('accessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "    pm.collectionVariables.set('userId',       json.user.id);",
+                  "    console.log('[AUTH] ✓ Buyer accessToken saved:', json.accessToken.slice(0,30) + '...');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"buyer@test.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/login", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "login"] }
+          }
+        },
+
+        {
+          "name": "Login — Shop Owner",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('[AUTH] Logging in as shop owner...');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Shop owner tokens saved', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.user.role).to.eql('SHOP_OWNER');",
+                  "    pm.collectionVariables.set('accessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "    pm.collectionVariables.set('userId',       json.user.id);",
+                  "    // shopId from token (will be null until shop is created)",
+                  "    if (json.user.shopId) {",
+                  "        pm.collectionVariables.set('shopId', json.user.shopId);",
+                  "        console.log('[AUTH] ✓ shopId saved:', json.user.shopId);",
+                  "    } else {",
+                  "        console.warn('[AUTH] shopId is null — create a shop first');",
+                  "    }",
+                  "    console.log('[AUTH] ✓ Shop owner accessToken saved.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@test.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/login", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "login"] }
+          }
+        },
+
+        {
+          "name": "Login — Admin",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.log('[AUTH] Logging in as INSENS_ADMIN...');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Admin tokens saved separately', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.user.role).to.eql('INSENS_ADMIN');",
+                  "    pm.collectionVariables.set('adminAccessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('adminRefreshToken', json.refreshToken);",
+                  "    // Also set as active token so admin-protected requests work immediately",
+                  "    pm.collectionVariables.set('accessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "    console.log('[AUTH] ✓ Admin tokens saved.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@insens.com\",\n  \"password\": \"AdminPass123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/login", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "login"] }
+          }
+        },
+
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const rt = pm.collectionVariables.get('refreshToken');",
+                  "if (!rt) { throw new Error('[PRE] refreshToken is empty — login first'); }",
+                  "console.log('[AUTH] Refreshing token...');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('New tokens saved', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('accessToken',  json.accessToken);",
+                  "    pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "    console.log('[AUTH] ✓ Tokens refreshed successfully.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/refresh", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "refresh"] }
+          }
+        },
+
+        {
+          "name": "Get Me (JWT decoded profile)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Profile returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('sub');",
+                  "    pm.expect(json).to.have.property('email');",
+                  "    pm.expect(json).to.have.property('role');",
+                  "    console.log('[AUTH] Me:', JSON.stringify(json));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "me"] }
+          }
+        },
+
+        {
+          "name": "Logout",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "// Clear tokens from collection",
+                  "pm.collectionVariables.set('accessToken',  '');",
+                  "pm.collectionVariables.set('refreshToken', '');",
+                  "console.log('[AUTH] Logged out — tokens cleared from collection variables.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/logout", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "logout"] }
+          }
+        }
+
+      ]
+    },
+
+    
+    {
+      "name": "👤 Users",
+      "item": [
+
+        {
+          "name": "Get My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Profile has expected fields', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('email');",
+                  "    pm.expect(json).to.have.property('role');",
+                  "    pm.expect(json).to.not.have.property('password');",
+                  "    console.log('[USERS] Profile:', json.email, '/', json.role);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] }
+          }
+        },
+
+        {
+          "name": "Update My Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Profile updated', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    console.log('[USERS] Profile updated:', JSON.stringify(json));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Name\",\n  \"avatarUrl\": \"https://example.com/avatar.jpg\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] }
+          }
+        },
+
+        {
+          "name": "Delete My Account",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "console.warn('[USERS] ⚠ This will DELETE your account permanently!');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('accessToken',  '');",
+                  "pm.collectionVariables.set('refreshToken', '');",
+                  "console.log('[USERS] Account deleted and tokens cleared.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] }
+          }
+        }
+
+      ]
+    },
+
+    
+    {
+      "name": "🏪 Shops",
+      "item": [
+
+        {
+          "name": "Create Shop (SHOP_OWNER only)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = pm.collectionVariables.get('accessToken');",
+                  "if (!token) throw new Error('[PRE] Login as SHOP_OWNER first');",
+                  "// Decode JWT role check (base64 decode middle segment)",
+                  "try {",
+                  "    const payload = JSON.parse(atob(token.split('.')[1]));",
+                  "    if (payload.role !== 'SHOP_OWNER') {",
+                  "        console.warn('[PRE] ⚠ Current token role is', payload.role, '— switch to SHOP_OWNER login');",
+                  "    }",
+                  "} catch(e) { /* ignore decode errors */ }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Shop created and ID saved', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('slug');",
+                  "    pm.expect(json.status).to.eql('PENDING');",
+                  "    pm.collectionVariables.set('shopId', json.id);",
+                  "    pm.collectionVariables.set('targetShopId', json.id);",
+                  "    console.log('[SHOPS] ✓ Shop created:', json.id, '| Status:', json.status);",
+                  "    console.log('[SHOPS] ⏳ Admin must APPROVE this shop before managing products.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oud & Roses Perfumery\",\n  \"description\": \"Premium Arabian oud and rose fragrances\",\n  \"address\": \"123 Fragrance Street\",\n  \"city\": \"Dubai\",\n  \"logoUrl\": \"https://example.com/logo.jpg\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/shops", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["shops"] }
+          }
+        },
+
+        {
+          "name": "List All Shops (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns paginated list', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('items');",
+                  "    pm.expect(json).to.have.property('total');",
+                  "    pm.expect(json.items).to.be.an('array');",
+                  "    if (json.items.length > 0) {",
+                  "        pm.collectionVariables.set('targetShopId', json.items[0].id);",
+                  "        console.log('[SHOPS] First shop ID saved:', json.items[0].id);",
+                  "    }",
+                  "    console.log('[SHOPS] Total shops:', json.total);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/shops?page=1&limit=10",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["shops"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" },
+                { "key": "city",  "value": "Dubai", "disabled": true }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get Shop by ID (Public)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('targetShopId') || pm.collectionVariables.get('shopId');",
+                  "if (!id) console.warn('[PRE] targetShopId is empty — list shops first');",
+                  "else pm.variables.set('_shopId', id);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Shop has expected fields', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('status');",
+                  "    console.log('[SHOPS] Shop:', json.name, '| Status:', json.status);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/shops/{{targetShopId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["shops", "{{targetShopId}}"] }
+          }
+        },
+
+        {
+          "name": "Update My Shop (SHOP_OWNER)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const shopId = pm.collectionVariables.get('shopId');",
+                  "if (!shopId) throw new Error('[PRE] shopId is empty — create a shop first');",
+                  "console.log('[SHOPS] Updating shop:', shopId);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Shop updated', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    console.log('[SHOPS] Updated:', json.name);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated description — finest oud collection\",\n  \"city\": \"Abu Dhabi\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/shops/{{shopId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["shops", "{{shopId}}"] }
+          }
+        },
+
+        {
+          "name": "Get Shop Products (Public)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('targetShopId') || pm.collectionVariables.get('shopId');",
+                  "if (!id) console.warn('[PRE] targetShopId is empty — list shops first');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns shop products', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('items');",
+                  "    console.log('[SHOPS] Products in shop:', json.total);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/shops/{{targetShopId}}/products?page=1&limit=10",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["shops", "{{targetShopId}}", "products"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        }
+
+      ]
+    },
+
+    
+    {
+      "name": "🧴 Products",
+      "item": [
+
+        {
+          "name": "List All Products (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Returns paginated products', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('items');",
+                  "    pm.expect(json).to.have.property('total');",
+                  "    if (json.items.length > 0) {",
+                  "        pm.collectionVariables.set('productId', json.items[0].id);",
+                  "        const cat = json.items[0].categoryId;",
+                  "        if (cat) pm.collectionVariables.set('categoryId', cat);",
+                  "        console.log('[PRODUCTS] First product ID saved:', json.items[0].id);",
+                  "    }",
+                  "    console.log('[PRODUCTS] Total:', json.total);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/products?page=1&limit=10&sortBy=createdAt&order=desc",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["products"],
+              "query": [
+                { "key": "page",       "value": "1" },
+                { "key": "limit",      "value": "10" },
+                { "key": "sortBy",     "value": "createdAt" },
+                { "key": "order",      "value": "desc" },
+                { "key": "categoryId", "value": "{{categoryId}}", "disabled": true },
+                { "key": "shopId",     "value": "{{shopId}}",     "disabled": true },
+                { "key": "minPrice",   "value": "10",             "disabled": true },
+                { "key": "maxPrice",   "value": "500",            "disabled": true }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get Product by ID (Public)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('productId');",
+                  "if (!id) console.warn('[PRE] productId is empty — list products first');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Product has expected fields', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('name');",
+                  "    pm.expect(json).to.have.property('price');",
+                  "    pm.expect(json).to.have.property('stock');",
+                  "    console.log('[PRODUCTS]', json.name, '| Price:', json.price, '| Stock:', json.stock);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products/{{productId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products", "{{productId}}"] }
+          }
+        },
+
+        {
+          "name": "Create Product (SHOP_OWNER)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = pm.collectionVariables.get('accessToken');",
+                  "if (!token) throw new Error('[PRE] Login as SHOP_OWNER first');",
+                  "try {",
+                  "    const payload = JSON.parse(atob(token.split('.')[1]));",
+                  "    if (payload.role !== 'SHOP_OWNER') {",
+                  "        console.warn('[PRE] ⚠ Current role is', payload.role, '— need SHOP_OWNER');",
+                  "    }",
+                  "    if (!payload.shopId) {",
+                  "        console.warn('[PRE] ⚠ shopId is null in token — shop must be APPROVED by admin first');",
+                  "    } else {",
+                  "        pm.collectionVariables.set('shopId', payload.shopId);",
+                  "    }",
+                  "} catch(e) {}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Product created and ID saved', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.have.property('price');",
+                  "    pm.collectionVariables.set('productId', json.id);",
+                  "    console.log('[PRODUCTS] ✓ Created:', json.id, '|', json.name, '| Price:', json.price);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Oud Al Sharq Eau de Parfum\",\n  \"description\": \"Rich dark oud with smoky base notes and rose heart\",\n  \"price\": 199.99,\n  \"stock\": 50,\n  \"categoryId\": \"{{categoryId}}\",\n  \"images\": [\n    \"https://example.com/product1.jpg\",\n    \"https://example.com/product2.jpg\"\n  ]\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products"] }
+          }
+        },
+
+        {
+          "name": "Update Product (SHOP_OWNER)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('productId');",
+                  "if (!id) throw new Error('[PRE] productId is empty — create a product first');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Product updated', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    console.log('[PRODUCTS] Updated price:', json.price, '| Stock:', json.stock);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 179.99,\n  \"stock\": 45,\n  \"isActive\": true,\n  \"description\": \"Updated — now with free shipping on orders over 200 AED\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products/{{productId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products", "{{productId}}"] }
+          }
+        },
+
+        {
+          "name": "Delete Product (SHOP_OWNER)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('productId');",
+                  "if (!id) throw new Error('[PRE] productId is empty — create a product first');",
+                  "console.warn('[PRODUCTS] ⚠ Deleting product:', id);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('productId', '');",
+                  "console.log('[PRODUCTS] Product deleted and productId cleared.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products/{{productId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products", "{{productId}}"] }
+          }
+        }
+
+      ]
+    },
+
+    
+    {
+      "name": "🏷️ Categories",
+      "item": [
+
+        {
+          "name": "List All Categories (Public)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Categories array returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.be.an('array');",
+                  "    if (json.length > 0) {",
+                  "        pm.collectionVariables.set('categoryId', json[0].id);",
+                  "        console.log('[CATEGORIES] First category saved:', json[0].id, '|', json[0].name);",
+                  "    } else {",
+                  "        console.warn('[CATEGORIES] No categories found — seed the database');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/categories", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["categories"] }
+          }
+        }
+
+      ]
+    },
+
+    
+    {
+      "name": "🛡️ Admin",
+      "item": [
+
+        {
+          "name": "Switch to Admin Token",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// This is a utility request — just sets the active token to admin",
+                  "const adminToken = pm.collectionVariables.get('adminAccessToken');",
+                  "if (!adminToken) throw new Error('[PRE] Run Login — Admin first');",
+                  "pm.collectionVariables.set('accessToken', adminToken);",
+                  "console.log('[ADMIN] Switched active token to adminAccessToken.');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Verify the token is INSENS_ADMIN",
+                  "const token = pm.collectionVariables.get('accessToken');",
+                  "try {",
+                  "    const payload = JSON.parse(atob(token.split('.')[1]));",
+                  "    pm.test('Active token is INSENS_ADMIN', () => {",
+                  "        pm.expect(payload.role).to.eql('INSENS_ADMIN');",
+                  "    });",
+                  "    console.log('[ADMIN] ✓ Active token role:', payload.role);",
+                  "} catch(e) {",
+                  "    console.error('[ADMIN] Could not decode token');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "me"] }
+          }
+        },
+
+        {
+          "name": "Get Platform Stats",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Stats returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    console.log('[ADMIN] Stats:', JSON.stringify(json));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/stats", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "stats"] }
+          }
+        },
+
+        {
+          "name": "List All Shops (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Admin shop list returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('items');",
+                  "    if (json.items.length > 0) {",
+                  "        pm.collectionVariables.set('targetShopId', json.items[0].id);",
+                  "        console.log('[ADMIN] First shop for admin actions:', json.items[0].id, '| Status:', json.items[0].status);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/admin/shops?page=1&limit=10&status=PENDING",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["admin", "shops"],
+              "query": [
+                { "key": "page",   "value": "1" },
+                { "key": "limit",  "value": "10" },
+                { "key": "status", "value": "PENDING",   "description": "PENDING | APPROVED | SUSPENDED" },
+                { "key": "status", "value": "APPROVED",  "disabled": true },
+                { "key": "status", "value": "SUSPENDED", "disabled": true }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get Shop by ID (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Shop detail returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    console.log('[ADMIN] Shop:', json.name, '| Status:', json.status, '| Owner:', json.owner?.email);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/shops/{{targetShopId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "shops", "{{targetShopId}}"] }
+          }
+        },
+
+        {
+          "name": "Approve Shop ✅",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('targetShopId');",
+                  "if (!id) throw new Error('[PRE] targetShopId is empty — list shops first');",
+                  "console.log('[ADMIN] Approving shop:', id);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Shop approved', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('APPROVED');",
+                  "    console.log('[ADMIN] ✓ Shop APPROVED:', json.id);",
+                  "    console.log('[ADMIN] Shop owner must re-login to get updated JWT with shopId.');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/shops/{{targetShopId}}/approve", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "shops", "{{targetShopId}}", "approve"] }
+          }
+        },
+
+        {
+          "name": "Suspend Shop 🚫",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('targetShopId');",
+                  "if (!id) throw new Error('[PRE] targetShopId is empty — list shops first');",
+                  "console.warn('[ADMIN] ⚠ Suspending shop:', id);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Shop suspended', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.status).to.eql('SUSPENDED');",
+                  "    console.log('[ADMIN] Shop SUSPENDED:', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/shops/{{targetShopId}}/suspend", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "shops", "{{targetShopId}}", "suspend"] }
+          }
+        },
+
+        {
+          "name": "List All Users (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('User list returned', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('items');",
+                  "    if (json.items.length > 0) {",
+                  "        // Save a non-admin user for deactivate test",
+                  "        const nonAdmin = json.items.find(u => u.role !== 'INSENS_ADMIN');",
+                  "        if (nonAdmin) {",
+                  "            pm.collectionVariables.set('targetUserId', nonAdmin.id);",
+                  "            console.log('[ADMIN] Target user for actions:', nonAdmin.id, '|', nonAdmin.email);",
+                  "        }",
+                  "    }",
+                  "    console.log('[ADMIN] Total users:', json.total);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/admin/users?page=1&limit=10",
+              "host": ["{{baseUrl}}{{apiPrefix}}"],
+              "path": ["admin", "users"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+
+        {
+          "name": "Get User by ID (Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('User detail returned without password', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.expect(json).to.not.have.property('password');",
+                  "    console.log('[ADMIN] User:', json.email, '| Role:', json.role, '| Active:', json.isActive);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/users/{{targetUserId}}", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "users", "{{targetUserId}}"] }
+          }
+        },
+
+        {
+          "name": "Deactivate User 🚫",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const id = pm.collectionVariables.get('targetUserId');",
+                  "if (!id) throw new Error('[PRE] targetUserId is empty — list users first');",
+                  "console.warn('[ADMIN] ⚠ Deactivating user:', id);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('User deactivated', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json.isActive).to.eql(false);",
+                  "    console.log('[ADMIN] ✓ User deactivated:', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/users/{{targetUserId}}/deactivate", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "users", "{{targetUserId}}", "deactivate"] }
+          }
+        }
+
+      ]
+    },
+
+    
+    {
+      "name": "🧪 Error & Edge Cases",
+      "item": [
+
+        {
+          "name": "401 — No Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', () => pm.response.to.have.status(401));",
+                  "console.log('[TEST] ✓ 401 returned as expected for missing token.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] }
+          }
+        },
+
+        {
+          "name": "403 — Buyer Tries Admin Route",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const token = pm.collectionVariables.get('accessToken');",
+                  "try {",
+                  "    const payload = JSON.parse(atob(token.split('.')[1]));",
+                  "    if (payload.role === 'INSENS_ADMIN') {",
+                  "        console.warn('[TEST] Active token is INSENS_ADMIN — this test needs a BUYER/SHOP_OWNER token to get 403');",
+                  "    }",
+                  "} catch(e) {}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 403 Forbidden', () => pm.response.to.have.status(403));",
+                  "console.log('[TEST] ✓ 403 returned as expected for insufficient role.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/admin/stats", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["admin", "stats"] }
+          }
+        },
+
+        {
+          "name": "400 — Register Invalid Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 400 Bad Request', () => pm.response.to.have.status(400));",
+                  "pm.test('Validation errors present', () => {",
+                  "    const json = pm.response.json();",
+                  "    pm.expect(json).to.have.property('message');",
+                  "    console.log('[TEST] Validation errors:', JSON.stringify(json.message));",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"not-an-email\",\n  \"password\": \"short\",\n  \"role\": \"INVALID_ROLE\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/auth/register", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["auth", "register"] }
+          }
+        },
+
+        {
+          "name": "404 — Product Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404 Not Found', () => pm.response.to.have.status(404));",
+                  "console.log('[TEST] ✓ 404 returned for non-existent product.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/products/00000000-0000-0000-0000-000000000000", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["products", "00000000-0000-0000-0000-000000000000"] }
+          }
+        },
+
+        {
+          "name": "401 — Expired/Invalid Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401', () => pm.response.to.have.status(401));",
+                  "console.log('[TEST] ✓ 401 returned for invalid token.');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "eyJhbGciOiJIUzI1NiJ9.this.is.a.fake.token", "type": "string" }]
+            },
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/users/me", "host": ["{{baseUrl}}{{apiPrefix}}"], "path": ["users", "me"] }
+          }
+        }
+
+      ]
+    }
+
+  ]
+}

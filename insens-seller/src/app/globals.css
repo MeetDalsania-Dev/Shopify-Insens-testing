@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Google Fonts: Cormorant Garamond (display) + Inter (body) ── */
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap");
+
+@layer base {
+  :root {
+    /* ── Luxury Oud & Gold CSS Variables ── */
+    --background:   38 30% 97%;       /* cream-50  #FDFAF6 */
+    --foreground:   22 55% 10%;       /* oud-950   #1A0D07 */
+
+    --card:         0 0% 100%;
+    --card-foreground: 22 55% 10%;
+
+    --popover:      0 0% 100%;
+    --popover-foreground: 22 55% 10%;
+
+    --primary:      22 58% 18%;       /* oud-800  #4A2C17 */
+    --primary-foreground: 38 30% 97%;
+
+    --secondary:    38 38% 90%;       /* cream-200 #F2E9D8 */
+    --secondary-foreground: 22 55% 20%;
+
+    --muted:        38 25% 92%;
+    --muted-foreground: 22 20% 45%;
+
+    --accent:       38 50% 60%;       /* gold-500  #C9A96E */
+    --accent-foreground: 22 55% 10%;
+
+    --destructive:  0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border:       38 28% 85%;       /* warm parchment */
+    --input:        38 28% 85%;
+    --ring:         22 58% 30%;       /* oud-700  */
+
+    --radius: 0.5rem;
+
+    /* Font tokens */
+    --font-cormorant: "Cormorant Garamond", Georgia, serif;
+    --font-inter:     "Inter", system-ui, sans-serif;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: var(--font-inter);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  h1, h2, h3 {
+    font-family: var(--font-cormorant);
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /* ── Sidebar link active state ── */
+  .nav-link-active {
+    @apply bg-oud-800 text-cream-50 shadow-sm;
+  }
+
+  /* ── Luxury card shimmer on hover ── */
+  .card-luxury {
+    @apply rounded-lg border border-cream-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md;
+  }
+
+  /* ── Gold divider accent ── */
+  .gold-divider {
+    @apply h-px w-12 bg-gold-500;
+  }
+
+  /* ── Stat card ── */
+  .stat-card {
+    @apply card-luxury flex flex-col gap-1 p-6;
+  }
+
+  /* ── Status badge helpers ── */
+  .badge-pending {
+    @apply inline-flex items-center rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20;
+  }
+  .badge-approved {
+    @apply inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-medium text-emerald-700 ring-1 ring-inset ring-emerald-600/20;
+  }
+  .badge-suspended {
+    @apply inline-flex items-center rounded-full bg-red-50 px-2.5 py-0.5 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20;
+  }
+}
