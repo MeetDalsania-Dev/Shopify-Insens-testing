@@ -63,3 +63,15 @@ temp/
 .env.*.local
 .firebase/
 .firebaserc
+
+*/GEMINI.md
+CLAUDE.md
+AGENTS.md 
+*/.windsurfrules
+.opencode.json
+.mcp.json
+code-review-graph.html
+.cursorrules
+.claude/
+.code-review-graph/
+docs/
