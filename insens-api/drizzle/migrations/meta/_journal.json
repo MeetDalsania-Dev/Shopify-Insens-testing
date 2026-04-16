@@ -8,6 +8,13 @@
       "when": 1776168052333,
       "tag": "0000_harsh_tattoo",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1776361193227,
+      "tag": "0001_absent_black_tarantula",
+      "breakpoints": true
     }
   ]
 }

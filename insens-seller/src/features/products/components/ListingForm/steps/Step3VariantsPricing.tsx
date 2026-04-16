@@ -15,7 +15,6 @@ import {
 } from "@/shared/components/ui/select";
 import { cn } from "@/shared/lib/utils";
 
-const SIZE_OPTIONS  = ["30ml", "50ml", "75ml", "100ml", "200ml", "custom"];
 const PKG_OPTIONS   = [
   { value: "full_bottle",  label: "Full Bottle"  },
   { value: "tester",       label: "Tester"       },
@@ -135,18 +134,8 @@ export function Step3VariantsPricing() {
                     <div>
                       <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Size</label>
                       <Controller control={control} name={`variants.${i}.size`} render={({ field }) => (
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {SIZE_OPTIONS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
+                        <Input placeholder="e.g. 100ml, 50ml, travel size" {...field} />
                       )} />
-                      {v?.size === "custom" && (
-                        <Controller control={control} name={`variants.${i}.custom_size_ml`} render={({ field }) => (
-                          <Input className="mt-2" placeholder="e.g. 125ml" {...field} />
-                        )} />
-                      )}
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">Packaging</label>

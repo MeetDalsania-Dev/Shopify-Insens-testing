@@ -1,5 +1,5 @@
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import { pgTable, uuid, varchar, text, numeric, integer, boolean, timestamp, primaryKey, char } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, text, numeric, integer, boolean, timestamp, primaryKey } from 'drizzle-orm/pg-core';
 import { vendors } from './vendors.schema';
 import { productStatusEnum, approvalStatusEnum, productTypeEnum, dataTypeEnum } from './enums';
 
@@ -34,8 +34,12 @@ export const products = pgTable('products', {
   status:           productStatusEnum('status').notNull().default('draft'),
   approvalStatus:   approvalStatusEnum('approval_status').notNull().default('pending_review'),
   productType:      productTypeEnum('product_type').notNull().default('simple'),
+  listingType:      varchar('listing_type', { length: 50 }),
+  tags:             text('tags'),
+  productVideo:     text('product_video'),
+  view360:          text('view_360'),
   taxClass:         varchar('tax_class', { length: 50 }),
-  originCountry:    char('origin_country', { length: 2 }),
+  originCountry:    varchar('origin_country', { length: 100 }),
   hsCode:           varchar('hs_code', { length: 20 }),
   ratingAvg:        numeric('rating_avg', { precision: 3, scale: 2 }).notNull().default('0'),
   ratingCount:      integer('rating_count').notNull().default(0),
@@ -53,11 +57,15 @@ export const productVariants = pgTable('product_variants', {
   mrp:          numeric('mrp', { precision: 12, scale: 2 }).notNull(),
   salePrice:    numeric('sale_price', { precision: 12, scale: 2 }).notNull(),
   costPrice:    numeric('cost_price', { precision: 12, scale: 2 }),
-  currency:     char('currency', { length: 3 }).notNull().default('INR'),
+  currency:     varchar('currency', { length: 3 }).notNull().default('INR'),
   weightGrams:  numeric('weight_grams', { precision: 10, scale: 2 }),
   lengthCm:     numeric('length_cm', { precision: 10, scale: 2 }),
   widthCm:      numeric('width_cm', { precision: 10, scale: 2 }),
   heightCm:     numeric('height_cm', { precision: 10, scale: 2 }),
+  sizeLabel:        varchar('size_label', { length: 50 }),
+  packagingType:    varchar('packaging_type', { length: 50 }),
+  editionType:      varchar('edition_type', { length: 50 }),
+  reorderThreshold: integer('reorder_threshold').notNull().default(0),
   stock:        integer('stock').notNull().default(0),
   isActive:     boolean('is_active').notNull().default(true),
   createdAt:    timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -72,6 +80,7 @@ export const productImages = pgTable('product_images', {
   altText:    varchar('alt_text', { length: 255 }),
   sortOrder:  integer('sort_order').notNull().default(0),
   isPrimary:  boolean('is_primary').notNull().default(false),
+  imageType:  varchar('image_type', { length: 20 }).notNull().default('gallery'),
   createdAt:  timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

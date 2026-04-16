@@ -76,7 +76,7 @@ export function ProductsTable() {
       key: "price",
       header: "Price",
       cell: (row) => (
-        <span className="font-medium">{formatCurrency(row.price)}</span>
+        <span className="font-medium">{formatCurrency(row.price ?? 0)}</span>
       ),
     },
     {
@@ -92,7 +92,7 @@ export function ProductsTable() {
       key: "status",
       header: "Active",
       cell: (row) => (
-        <ProductStatusToggle productId={row.id} isActive={row.isActive} />
+        <ProductStatusToggle productId={row.id} isActive={row.isActive ?? true} />
       ),
     },
     {

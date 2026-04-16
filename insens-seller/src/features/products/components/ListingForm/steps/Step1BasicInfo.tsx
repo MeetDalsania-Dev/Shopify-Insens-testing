@@ -115,27 +115,19 @@ export function Step1BasicInfo() {
             </FormItem>
           )} />
 
-          {/* Category */}
-          <FormField control={control} name="category_id" render={({ field }) => (
-            <FormItem>
-              <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {categoryOptions.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )} />
+         {/* Category */}
+<FormField control={control} name="category_id" render={({ field }) => (
+  <FormItem>
+    <FormLabel>Category <span className="text-red-500">*</span></FormLabel>
+    <FormControl>
+      <Input
+        placeholder="Enter category"
+        {...field}
+      />
+    </FormControl>
+    <FormMessage />
+  </FormItem>
+)} />
 
           {/* Gender */}
           <FormField control={control} name="gender_target" render={({ field }) => (

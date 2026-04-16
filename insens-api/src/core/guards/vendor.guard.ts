@@ -11,7 +11,8 @@ export class VendorGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest<{ user: JwtPayload }>();
     const user    = request.user;
-
+    console.log(user);
+    
     if (!user.roles?.includes(UserRole.VENDOR_OWNER)) {
       throw new ForbiddenException({
         code:    'FORBIDDEN',

@@ -48,8 +48,7 @@ export const step2Schema = z.object({
 const variantSchema = z.object({
   id:                z.string().optional(),
   variant_label:     z.string().optional().default(''),
-  size:              requiredStr('Select size'),
-  custom_size_ml:    z.string().optional().default(''),
+  size:              z.string().min(1, 'Size is required').default(''),
   packaging:         requiredStr('Select packaging'),
   edition:           requiredStr('Select edition').default('standard'),
   sku:               z.string().optional().default(''),

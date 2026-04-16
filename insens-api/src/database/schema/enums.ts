@@ -13,6 +13,6 @@ export const addressTypeEnum      = pgEnum('address_type',      ['billing', 'shi
 export const productStatusEnum    = pgEnum('product_status',    ['draft', 'pending_review', 'active', 'archived', 'rejected']);
 export const productTypeEnum      = pgEnum('product_type',      ['simple', 'variant', 'bundle']);
 export const genderTargetEnum     = pgEnum('gender_target',     ['men', 'women', 'unisex']);
-export const concentrationEnum    = pgEnum('concentration',     ['edt', 'edp', 'parfum', 'extrait']);
+export const concentrationEnum    = pgEnum('concentration',     ['edt', 'edp', 'parfum', 'extrait', 'attar', 'body_mist']);
 export const fragranceFamilyEnum  = pgEnum('fragrance_family',  ['woody', 'floral', 'oriental', 'fresh', 'citrus', 'aquatic', 'gourmand']);
 export const dataTypeEnum         = pgEnum('data_type',         ['text', 'number', 'boolean', 'enum']);

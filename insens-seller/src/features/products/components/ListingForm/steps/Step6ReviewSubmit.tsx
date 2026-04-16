@@ -175,7 +175,7 @@ export function Step6ReviewSubmit({ onGoToStep, onSaveDraft, onSubmit, isSubmitt
                 {values.variants.map((v, i) => (
                   <tr key={i} className="border-b border-border/50 last:border-0">
                     <td className="px-4 py-2 font-medium">{v.variant_label || `Variant ${i + 1}`}</td>
-                    <td className="px-4 py-2 text-muted-foreground">{v.custom_size_ml || v.size}</td>
+                    <td className="px-4 py-2 text-muted-foreground">{v.size || "—"}</td>
                     <td className="px-4 py-2 text-right font-mono">{v.sale_price || "—"} AED</td>
                     <td className="px-4 py-2 text-right">{v.stock_quantity ?? "—"}</td>
                     <td className="px-4 py-2 text-center">

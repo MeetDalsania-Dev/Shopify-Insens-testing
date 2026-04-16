@@ -10,15 +10,13 @@ export type ProductStatus  = 'draft' | 'pending_review' | 'approved' | 'rejected
 
 // ── Variant ──────────────────────────────────────────────────────────────────
 
-export type VariantSize      = '30ml' | '50ml' | '75ml' | '100ml' | '200ml' | 'custom';
 export type VariantPackaging = 'full_bottle' | 'tester' | 'travel_size' | 'refill' | 'gift_set' | 'decant';
 export type VariantEdition   = 'standard' | 'limited' | 'collector';
 
 export interface ProductVariant {
   id?:                string;
   variant_label:      string;
-  size:               VariantSize;
-  custom_size_ml?:    string;
+  size:               string;
   packaging:          VariantPackaging;
   edition:            VariantEdition;
   sku:                string;
@@ -148,7 +146,7 @@ export const STEP_REQUIRED_FIELDS: Record<number, (keyof ProductListingFormData)
 
 export const DEFAULT_VARIANT: ProductVariant = {
   variant_label:     '',
-  size:              '100ml',
+  size:              '',
   packaging:         'full_bottle',
   edition:           'standard',
   sku:               '',

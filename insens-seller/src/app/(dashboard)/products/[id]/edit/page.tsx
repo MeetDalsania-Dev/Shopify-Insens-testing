@@ -39,7 +39,7 @@ export default function EditProductPage({ params }: EditProductPageProps) {
   const defaultValues: Partial<FullProductFormValues> = storedMeta
     ? (storedMeta as Partial<FullProductFormValues>)
     : {
-        title:             product?.name ?? "",
+        title:             product?.title ?? product?.name ?? "",
         short_description: product?.description ?? "",
         full_description:  product?.description ?? "",
         primary_image:     product?.images?.[0] ?? "",
@@ -48,14 +48,13 @@ export default function EditProductPage({ params }: EditProductPageProps) {
         variants: [
           {
             variant_label:     "Default",
-            size:              "100ml",
-            custom_size_ml:    "",
+            size:              "",
             packaging:         "full_bottle",
             edition:           "standard",
             sku:               "",
             barcode:           "",
             mrp:               "",
-            sale_price:        parseFloat(product?.price ?? "0") || "",
+            sale_price:        parseFloat(String(product?.price ?? "0")) || "",
             cost_price:        "",
             stock_quantity:    product?.stock ?? "",
             reorder_threshold: "",
@@ -69,13 +68,11 @@ export default function EditProductPage({ params }: EditProductPageProps) {
       };
 
   const buildPayload = (data: FullProductFormValues, extra?: object) => ({
-    name:        data.title,
-    description: data.full_description || data.short_description,
-    price:       Number(data.variants?.[0]?.sale_price) || 0,
-    stock:       data.variants?.reduce((s, v) => s + (Number(v.stock_quantity) || 0), 0) ?? 0,
-    categoryId:  data.category_id || undefined,
-    images:      data.gallery_images?.map((g) => g.url).filter(Boolean),
-    metadata:    data,
+    title:            data.title,
+    shortDescription: data.short_description  || undefined,
+    description:      data.full_description   || undefined,
+    categoryId:       data.category_id        || undefined,
+    brandId:          data.brand_id           || undefined,
     ...extra,
   });
 
