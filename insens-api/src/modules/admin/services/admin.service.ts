@@ -39,6 +39,26 @@ export class AdminService {
     });
   }
 
+  async rejectVendor(id: string) {
+    const vendor = await this.adminRepo.findVendorById(id);
+    if (!vendor) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Vendor not found' });
+
+    return this.adminRepo.updateVendor(id, {
+      approvalStatus: 'rejected',
+      status:         'rejected',
+    });
+  }
+
+  async setWaitingVendor(id: string) {
+    const vendor = await this.adminRepo.findVendorById(id);
+    if (!vendor) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Vendor not found' });
+
+    return this.adminRepo.updateVendor(id, {
+      approvalStatus: 'waiting',
+      status:         'pending',
+    });
+  }
+
   async suspendVendor(id: string) {
     const vendor = await this.adminRepo.findVendorById(id);
     if (!vendor) throw new NotFoundException({ code: 'NOT_FOUND', message: 'Vendor not found' });

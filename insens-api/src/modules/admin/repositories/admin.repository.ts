@@ -1,13 +1,14 @@
 import { Injectable }     from '@nestjs/common';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import { eq, sql }        from 'drizzle-orm';
+import { eq, sql, and }   from 'drizzle-orm';
 import * as schema        from '../../../database/schema';
 import { InjectDatabase } from '../../../database/database.decorator';
 
 export interface AdminVendorFilters {
-  status?: string;
-  page?:   number;
-  limit?:  number;
+  status?:         string;
+  approvalStatus?: string;
+  page?:           number;
+  limit?:          number;
 }
 
 export interface AdminUserFilters {
@@ -46,12 +47,12 @@ export class AdminRepository {
     ]);
 
     return {
-      totalUsers:           totalUsersRes[0].count,
-      totalVendors:         pendingVendorsRes[0].count + activeVendorsRes[0].count + suspendedVendorsRes[0].count,
-      totalPendingVendors:  pendingVendorsRes[0].count,
-      totalActiveVendors:   activeVendorsRes[0].count,
+      totalUsers:            totalUsersRes[0].count,
+      totalVendors:          pendingVendorsRes[0].count + activeVendorsRes[0].count + suspendedVendorsRes[0].count,
+      totalPendingVendors:   pendingVendorsRes[0].count,
+      totalActiveVendors:    activeVendorsRes[0].count,
       totalSuspendedVendors: suspendedVendorsRes[0].count,
-      totalProducts:        totalProductsRes[0].count,
+      totalProducts:         totalProductsRes[0].count,
     };
   }
 
@@ -62,15 +63,52 @@ export class AdminRepository {
     const limit  = filters.limit ?? 20;
     const offset = (page - 1) * limit;
 
-    const whereClause = filters.status
-      ? eq(schema.vendors.status, filters.status as any)
-      : undefined;
+    // Build where clause — prefer approvalStatus filter, fall back to status
+    const conditions: ReturnType<typeof eq>[] = [];
+    if (filters.approvalStatus) {
+      conditions.push(eq(schema.vendors.approvalStatus, filters.approvalStatus as any));
+    } else if (filters.status) {
+      conditions.push(eq(schema.vendors.status, filters.status as any));
+    }
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [items, [{ count }]] = await Promise.all([
+    // Joined select: vendor + owner (vendorUsers role='owner') + user + profile
+    const ownerJoinCondition = and(
+      eq(schema.vendorUsers.vendorId, schema.vendors.id),
+      eq(schema.vendorUsers.role,     'owner'),
+    );
+
+    const [rows, [{ count }]] = await Promise.all([
       this.db
-        .select()
+        .select({
+          // Vendor fields
+          id:             schema.vendors.id,
+          slug:           schema.vendors.slug,
+          legalName:      schema.vendors.legalName,
+          displayName:    schema.vendors.displayName,
+          email:          schema.vendors.email,
+          phone:          schema.vendors.phone,
+          status:         schema.vendors.status,
+          approvalStatus: schema.vendors.approvalStatus,
+          logoUrl:        schema.vendors.logoUrl,
+          description:    schema.vendors.description,
+          createdAt:      schema.vendors.createdAt,
+          approvedAt:     schema.vendors.approvedAt,
+          suspendedAt:    schema.vendors.suspendedAt,
+          updatedAt:      schema.vendors.updatedAt,
+          // Owner fields
+          ownerId:        schema.users.id,
+          ownerEmail:     schema.users.email,
+          ownerCreatedAt: schema.users.createdAt,
+          ownerFirstName: schema.userProfiles.firstName,
+          ownerLastName:  schema.userProfiles.lastName,
+        })
         .from(schema.vendors)
+        .leftJoin(schema.vendorUsers,  ownerJoinCondition)
+        .leftJoin(schema.users,        eq(schema.users.id,        schema.vendorUsers.userId))
+        .leftJoin(schema.userProfiles, eq(schema.userProfiles.userId, schema.vendorUsers.userId))
         .where(whereClause)
+        .orderBy(schema.vendors.createdAt)
         .limit(limit)
         .offset(offset),
       this.db
@@ -79,13 +117,102 @@ export class AdminRepository {
         .where(whereClause),
     ]);
 
+    const items = rows.map((r) => ({
+      id:             r.id,
+      slug:           r.slug,
+      legalName:      r.legalName,
+      displayName:    r.displayName,
+      email:          r.email,
+      phone:          r.phone,
+      status:         r.status,
+      approvalStatus: r.approvalStatus,
+      logoUrl:        r.logoUrl,
+      description:    r.description,
+      createdAt:      r.createdAt,
+      approvedAt:     r.approvedAt,
+      suspendedAt:    r.suspendedAt,
+      updatedAt:      r.updatedAt,
+      owner: r.ownerId
+        ? {
+            id:        r.ownerId,
+            email:     r.ownerEmail,
+            firstName: r.ownerFirstName ?? null,
+            lastName:  r.ownerLastName  ?? null,
+            createdAt: r.ownerCreatedAt,
+          }
+        : null,
+    }));
+
     return { items, total: count, page, limit };
   }
 
   async findVendorById(id: string) {
-    return this.db.query.vendors.findFirst({
-      where: eq(schema.vendors.id, id),
-    });
+    const ownerJoinCondition = and(
+      eq(schema.vendorUsers.vendorId, schema.vendors.id),
+      eq(schema.vendorUsers.role,     'owner'),
+    );
+
+    const rows = await this.db
+      .select({
+        id:             schema.vendors.id,
+        slug:           schema.vendors.slug,
+        legalName:      schema.vendors.legalName,
+        displayName:    schema.vendors.displayName,
+        email:          schema.vendors.email,
+        phone:          schema.vendors.phone,
+        status:         schema.vendors.status,
+        approvalStatus: schema.vendors.approvalStatus,
+        logoUrl:        schema.vendors.logoUrl,
+        bannerUrl:      schema.vendors.bannerUrl,
+        description:    schema.vendors.description,
+        businessType:   schema.vendors.businessType,
+        createdAt:      schema.vendors.createdAt,
+        approvedAt:     schema.vendors.approvedAt,
+        suspendedAt:    schema.vendors.suspendedAt,
+        updatedAt:      schema.vendors.updatedAt,
+        ownerId:        schema.users.id,
+        ownerEmail:     schema.users.email,
+        ownerCreatedAt: schema.users.createdAt,
+        ownerFirstName: schema.userProfiles.firstName,
+        ownerLastName:  schema.userProfiles.lastName,
+      })
+      .from(schema.vendors)
+      .leftJoin(schema.vendorUsers,  ownerJoinCondition)
+      .leftJoin(schema.users,        eq(schema.users.id,        schema.vendorUsers.userId))
+      .leftJoin(schema.userProfiles, eq(schema.userProfiles.userId, schema.vendorUsers.userId))
+      .where(eq(schema.vendors.id, id))
+      .limit(1);
+
+    if (!rows.length) return null;
+    const r = rows[0];
+
+    return {
+      id:             r.id,
+      slug:           r.slug,
+      legalName:      r.legalName,
+      displayName:    r.displayName,
+      email:          r.email,
+      phone:          r.phone,
+      status:         r.status,
+      approvalStatus: r.approvalStatus,
+      logoUrl:        r.logoUrl,
+      bannerUrl:      r.bannerUrl,
+      description:    r.description,
+      businessType:   r.businessType,
+      createdAt:      r.createdAt,
+      approvedAt:     r.approvedAt,
+      suspendedAt:    r.suspendedAt,
+      updatedAt:      r.updatedAt,
+      owner: r.ownerId
+        ? {
+            id:        r.ownerId,
+            email:     r.ownerEmail,
+            firstName: r.ownerFirstName ?? null,
+            lastName:  r.ownerLastName  ?? null,
+            createdAt: r.ownerCreatedAt,
+          }
+        : null,
+    };
   }
 
   async updateVendor(id: string, data: Partial<schema.NewVendor>) {

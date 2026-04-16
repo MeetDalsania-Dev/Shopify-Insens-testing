@@ -26,8 +26,9 @@ export class VendorsService {
       approvalStatus: 'pending_review',
     });
 
-    // Link the creator as vendor owner
+    // Link the creator as vendor owner and assign platform role
     await this.vendorsRepo.linkUser(vendor.id, user.sub, 'owner');
+    await this.vendorsRepo.assignVendorOwnerRole(user.sub);
 
     return vendor;
   }

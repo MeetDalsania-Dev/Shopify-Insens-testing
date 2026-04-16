@@ -19,6 +19,8 @@ const badgeVariants = cva(
           'border-transparent bg-amber-100 text-amber-800 hover:bg-amber-100/80',
         danger:
           'border-transparent bg-red-100 text-red-800 hover:bg-red-100/80',
+        waiting:
+          'border-transparent bg-blue-100 text-blue-800 hover:bg-blue-100/80',
       },
     },
     defaultVariants: {

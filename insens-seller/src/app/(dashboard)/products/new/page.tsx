@@ -1,50 +1,52 @@
 "use client";
 
-import { ProductForm } from "@/features/products/components/ProductForm";
-import { useCreateProduct } from "@/features/products/hooks/useCreateProduct";
-import { PageHeader } from "@/shared/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
-import type { ProductFormValues } from "@/features/products/validation/product.schema";
+import { useRouter }   from "next/navigation";
+import { useToast }    from "@/shared/hooks/useToast";
+import productsApi     from "@/features/products/api/products.api";
+import { ProductListingForm } from "@/features/products/components/ListingForm";
+import type { FullProductFormValues } from "@/features/products/validation/listing-form.schema";
 
 export default function NewProductPage() {
-  const { createProduct, isCreating } = useCreateProduct();
+  const router = useRouter();
+  const toast  = useToast();
 
-  async function handleSubmit(values: ProductFormValues) {
-    await createProduct({
-      name:        values.name,
-      description: values.description,
-      price:       values.price,
-      stock:       values.stock,
-      categoryId:  values.categoryId || undefined,
-      images:      values.images?.filter(Boolean),
-    });
-  }
+  const buildPayload = (data: FullProductFormValues, status: string) => ({
+    name:        data.title,
+    description: data.full_description || data.short_description,
+    price:       Number(data.variants?.[0]?.sale_price) || 0,
+    stock:       data.variants?.reduce((s, v) => s + (Number(v.stock_quantity) || 0), 0) ?? 0,
+    categoryId:  data.category_id || undefined,
+    images:      data.gallery_images?.map((g) => g.url).filter(Boolean),
+    status,
+    metadata:    data,
+  });
 
+  const handleSaveDraft = async (data: FullProductFormValues) => {
+    await productsApi.createProduct(buildPayload(data, "draft") as any);
+    toast.success("Draft saved.", "Continue editing any time.");
+  };
+
+  const handleSubmit = async (data: FullProductFormValues) => {
+    try {
+      await productsApi.createProduct(buildPayload(data, "pending_review") as any);
+      toast.success(
+        "Submitted for review!",
+        "Your product is pending approval. We'll notify you once it's live.",
+      );
+      router.push("/products");
+    } catch (err: any) {
+      toast.error("Submission failed", err?.message ?? "Please try again.");
+    }
+  };
+
+  // Negative margin escapes the DashboardLayout's p-6, giving the form full width/height
   return (
-    <div>
-      <PageHeader
-        title="Add Product"
-        description="List a new fragrance in your shop."
-        backHref="/products"
+    <div className="-m-6">
+      <ProductListingForm
+        mode="create"
+        onSaveDraft={handleSaveDraft}
+        onSubmit={handleSubmit}
       />
-
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-xl">Product Details</CardTitle>
-            <CardDescription>
-              Fill in the details below. Products are visible to buyers once your shop is approved.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ProductForm
-              mode="create"
-              onSubmit={handleSubmit}
-              isSubmitting={isCreating}
-            />
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }

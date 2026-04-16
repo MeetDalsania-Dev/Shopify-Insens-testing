@@ -3,14 +3,21 @@ import { VendorRequest } from '../types/requests.types';
 import { PaginatedResponse, PaginationParams } from '@/shared/types/api.types';
 
 export const requestsApi = {
+  /** List vendors — filtered by approvalStatus for the requests page. */
   getRequests: (
-    params?: PaginationParams & { status?: string }
+    params?: PaginationParams & { approvalStatus?: string }
   ): Promise<PaginatedResponse<VendorRequest>> =>
-    http.get('/api/v1/admin/shops', { params }),
+    http.get('/api/v1/admin/vendors', { params }),
 
   approveRequest: (id: string): Promise<VendorRequest> =>
-    http.patch(`/api/v1/admin/shops/${id}/approve`),
+    http.patch(`/api/v1/admin/vendors/${id}/approve`),
 
-  declineRequest: (id: string): Promise<VendorRequest> =>
-    http.patch(`/api/v1/admin/shops/${id}/decline`),
+  rejectRequest: (id: string): Promise<VendorRequest> =>
+    http.patch(`/api/v1/admin/vendors/${id}/reject`),
+
+  setWaitingRequest: (id: string): Promise<VendorRequest> =>
+    http.patch(`/api/v1/admin/vendors/${id}/waiting`),
+
+  suspendRequest: (id: string): Promise<VendorRequest> =>
+    http.patch(`/api/v1/admin/vendors/${id}/suspend`),
 };

@@ -1,39 +1,33 @@
 'use client';
 
 import { useState } from 'react';
-import { useRequests } from '@/features/requests/hooks/useRequests';
-import { RequestsTable } from '@/features/requests/components/RequestsTable';
-import { PageHeader } from '@/shared/components/PageHeader';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/components/ui/select';
-import { Card, CardContent } from '@/shared/components/ui/card';
-import { Clock, CheckCircle, XCircle, Inbox } from 'lucide-react';
+import { useRequests }     from '@/features/requests/hooks/useRequests';
+import { RequestsTable }   from '@/features/requests/components/RequestsTable';
+import { PageHeader }      from '@/shared/components/PageHeader';
+import { Clock, CheckCircle, XCircle, Inbox, PauseCircle } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 
+// approvalStatus values that map to each tab
 const STATUS_TABS = [
-  { value: '',         label: 'All',      icon: Inbox,        color: 'text-muted-foreground' },
-  { value: 'PENDING',  label: 'Pending',  icon: Clock,        color: 'text-amber-600' },
-  { value: 'APPROVED', label: 'Approved', icon: CheckCircle,  color: 'text-emerald-600' },
-  { value: 'DECLINED', label: 'Declined', icon: XCircle,      color: 'text-red-600' },
+  { value: '',              label: 'All',           icon: Inbox,        color: 'text-muted-foreground' },
+  { value: 'pending_review', label: 'Pending',      icon: Clock,        color: 'text-amber-600'        },
+  { value: 'waiting',       label: 'Waiting',        icon: PauseCircle,  color: 'text-blue-500'         },
+  { value: 'approved',      label: 'Approved',       icon: CheckCircle,  color: 'text-emerald-600'      },
+  { value: 'rejected',      label: 'Rejected',       icon: XCircle,      color: 'text-red-600'          },
 ] as const;
 
 export default function RequestsPage() {
-  const [status, setStatus] = useState('');
+  const [approvalStatus, setApprovalStatus] = useState('');
   const [page, setPage] = useState(1);
 
   const { requests, isLoading, mutate } = useRequests({
     page,
     limit: 20,
-    status: status || undefined,
+    approvalStatus: approvalStatus || undefined,
   });
 
   const handleTabChange = (val: string) => {
-    setStatus(val);
+    setApprovalStatus(val);
     setPage(1);
   };
 
@@ -41,14 +35,14 @@ export default function RequestsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Vendor Requests"
-        description="Review shop applications from vendors — approve or decline their requests."
+        description="Review shop applications — approve, reject, or place them on hold."
       />
 
       {/* Status filter tabs */}
       <div className="flex items-center gap-2 flex-wrap">
         {STATUS_TABS.map((tab) => {
-          const Icon = tab.icon;
-          const active = status === tab.value;
+          const Icon   = tab.icon;
+          const active = approvalStatus === tab.value;
           return (
             <button
               key={tab.value}
@@ -62,6 +56,12 @@ export default function RequestsPage() {
             >
               <Icon className={cn('h-4 w-4', active ? 'text-primary' : tab.color)} />
               {tab.label}
+              {/* Show count from pagination data */}
+              {active && requests?.total !== undefined && (
+                <span className="ml-1 rounded-full bg-primary/15 px-1.5 py-0.5 text-xs font-medium text-primary">
+                  {requests.total}
+                </span>
+              )}
             </button>
           );
         })}

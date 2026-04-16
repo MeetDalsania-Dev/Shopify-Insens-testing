@@ -48,20 +48,21 @@ export class AuthService {
       lastName:  dto.lastName  ?? null,
     });
 
-    // Auto-assign `customer` role
-    const customerRole = await this.authRepo.findRoleByCode(UserRole.CUSTOMER);
-    if (customerRole) {
-      await this.authRepo.assignRole(user.id, customerRole.id);
+    // Assign the requested role — only vendor_owner is accepted, otherwise customer
+    const roleCode = dto.role === UserRole.VENDOR_OWNER ? UserRole.VENDOR_OWNER : UserRole.CUSTOMER;
+    const roleRow  = await this.authRepo.findRoleByCode(roleCode);
+    if (roleRow) {
+      await this.authRepo.assignRole(user.id, roleRow.id);
     }
 
-    return this.issueTokens(user.id, user.email!, [UserRole.CUSTOMER], null);
+    return this.issueTokens(user.id, user.email!, [roleCode], null);
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
 
   async login(dto: LoginDto) {
+    
     const user = await this.authRepo.findUserByEmail(dto.email);
-
     if (!user) {
       throw new UnauthorizedException({
         code:    'AUTH_INVALID_CREDENTIALS',

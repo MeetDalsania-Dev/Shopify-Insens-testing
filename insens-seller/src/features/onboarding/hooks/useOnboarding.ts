@@ -17,16 +17,17 @@ export function useOnboarding() {
   async function createShop(values: OnboardingFormValues) {
     setIsLoading(true);
     try {
-      await onboardingApi.createShop({
-        name:        values.name,
-        description: values.description,
-        city:        values.city,
-        address:     values.address,
-        logoUrl:     values.logoUrl || undefined,
+      const shop = await onboardingApi.createShop({
+        legalName:   values.legalName,
+        displayName: values.displayName,
+        slug:        values.slug,
+        description: values.description || undefined,
+        email:       values.email       || undefined,
+        phone:       values.phone       || undefined,
       });
 
-      // Refresh NextAuth session so shopId gets populated
-      await update();
+      // Refresh NextAuth session with the new shopId (vendorId from API)
+      await update({ shopId: shop.id });
 
       toast.success(
         "Shop created!",

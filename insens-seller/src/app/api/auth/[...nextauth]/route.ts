@@ -26,16 +26,20 @@ const authOptions: NextAuthOptions = {
 
           if (!user) return null;
 
-          // Only SHOP_OWNER role is allowed in this dashboard
-          if (user.role !== "SHOP_OWNER") {
+          // API returns roles as string[] — only vendor_owner is allowed in this dashboard
+          const roles: string[] = Array.isArray(user.roles) ? user.roles : [];
+          if (!roles.includes("vendor_owner")) {
             throw new Error("FORBIDDEN");
           }
+
+          // vendorId from JWT payload is the shopId in the seller context
+          const shopId: string | null = payload.vendorId ?? user.vendorId ?? null;
 
           return {
             id:           user.id,
             email:        user.email,
-            role:         user.role,
-            shopId:       user.shopId ?? null,
+            role:         "vendor_owner",
+            shopId,
             firstName:    user.firstName ?? "",
             lastName:     user.lastName  ?? "",
             accessToken:  payload.accessToken,
@@ -53,17 +57,24 @@ const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // On first sign-in user object is populated
       if (user) {
-        token.id           = user.id;
-        token.role         = (user as unknown as Record<string, unknown>).role as string;
-        token.shopId       = (user as unknown as Record<string, unknown>).shopId as string | null;
-        token.firstName    = (user as unknown as Record<string, unknown>).firstName as string;
-        token.lastName     = (user as unknown as Record<string, unknown>).lastName  as string;
-        token.accessToken  = (user as unknown as Record<string, unknown>).accessToken  as string;
-        token.refreshToken = (user as unknown as Record<string, unknown>).refreshToken as string;
+        const u = user as unknown as Record<string, unknown>;
+        token.id           = u.id           as string;
+        token.role         = u.role         as string;
+        token.shopId       = u.shopId       as string | null;
+        token.firstName    = u.firstName    as string;
+        token.lastName     = u.lastName     as string;
+        token.accessToken  = u.accessToken  as string;
+        token.refreshToken = u.refreshToken as string;
       }
+
+      // Handle session update — refresh shopId after onboarding
+      if (trigger === "update" && session) {
+        if (session.shopId !== undefined) token.shopId = session.shopId;
+      }
+
       return token;
     },
 

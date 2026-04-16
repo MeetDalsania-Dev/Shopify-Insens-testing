@@ -3,6 +3,7 @@ import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import { eq, sql }        from 'drizzle-orm';
 import * as schema        from '../../../database/schema';
 import { InjectDatabase } from '../../../database/database.decorator';
+import { UserRole }       from '../../../common/constants/roles.constant';
 
 @Injectable()
 export class VendorsRepository {
@@ -69,5 +70,20 @@ export class VendorsRepository {
       where: eq(schema.vendorUsers.vendorId, vendorId),
     });
     return !!row;
+  }
+
+  // ── Role helpers ──────────────────────────────────────────────────────────
+
+  /** Assign the vendor_owner platform role to a user (idempotent). */
+  async assignVendorOwnerRole(userId: string): Promise<void> {
+    const role = await this.db.query.roles.findFirst({
+      where: eq(schema.roles.code, UserRole.VENDOR_OWNER),
+    });
+    if (!role) return;
+
+    await this.db
+      .insert(schema.userRoles)
+      .values({ userId, roleId: role.id })
+      .onConflictDoNothing();
   }
 }

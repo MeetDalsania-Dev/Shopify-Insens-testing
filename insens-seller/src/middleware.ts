@@ -5,8 +5,8 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
 
-    // Block non-SHOP_OWNER from dashboard routes
-    if (token && token.role !== "SHOP_OWNER") {
+    // Block non-vendor_owner from dashboard routes
+    if (token && token.role !== "vendor_owner") {
       return NextResponse.redirect(new URL("/login?error=forbidden", req.url));
     }
 

@@ -1,82 +1,114 @@
 "use client";
 
-import { use } from "react";
-import { useProduct } from "@/features/products/hooks/useProduct";
-import { useUpdateProduct } from "@/features/products/hooks/useUpdateProduct";
-import { ProductForm } from "@/features/products/components/ProductForm";
-import { PageHeader } from "@/shared/components/PageHeader";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/shared/components/ui/card";
-import { Skeleton } from "@/shared/components/ui/skeleton";
-import type { ProductFormValues } from "@/features/products/validation/product.schema";
+import { use }         from "react";
+import { useRouter }   from "next/navigation";
+import { useProduct }  from "@/features/products/hooks/useProduct";
+import { useToast }    from "@/shared/hooks/useToast";
+import productsApi     from "@/features/products/api/products.api";
+import { ProductListingForm } from "@/features/products/components/ListingForm";
+import { Skeleton }    from "@/shared/components/ui/skeleton";
+import type { FullProductFormValues } from "@/features/products/validation/listing-form.schema";
+import type { ProductListingFormData } from "@/features/products/types/listing-form.types";
 
 interface EditProductPageProps {
   params: Promise<{ id: string }>;
 }
 
 export default function EditProductPage({ params }: EditProductPageProps) {
-  const { id } = use(params);
+  const { id }  = use(params);
+  const router  = useRouter();
+  const toast   = useToast();
   const { product, isLoading } = useProduct(id);
-  const { updateProduct, isUpdating } = useUpdateProduct();
 
-  async function handleSubmit(values: ProductFormValues) {
-    await updateProduct(id, {
-      name:        values.name,
-      description: values.description,
-      price:       values.price,
-      stock:       values.stock,
-      categoryId:  values.categoryId || undefined,
-      images:      values.images?.filter(Boolean),
-    });
+  if (isLoading) {
+    return (
+      <div className="p-8 space-y-4 max-w-2xl">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="space-y-2">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-9 w-full" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
-  const defaultValues = product
-    ? {
-        name:        product.name,
-        description: product.description ?? "",
-        price:       parseFloat(product.price),
-        stock:       product.stock,
-        categoryId:  product.categoryId ?? "",
-        images:      product.images ?? [],
-      }
-    : undefined;
+  // Restore full listing form metadata if it was saved; otherwise map basic fields
+  const storedMeta = (product as any)?.metadata as Partial<ProductListingFormData> | undefined;
 
+  const defaultValues: Partial<FullProductFormValues> = storedMeta
+    ? (storedMeta as Partial<FullProductFormValues>)
+    : {
+        title:             product?.name ?? "",
+        short_description: product?.description ?? "",
+        full_description:  product?.description ?? "",
+        primary_image:     product?.images?.[0] ?? "",
+        gallery_images:    (product?.images?.slice(1) ?? []).map((url, i) => ({ url, order: i })),
+        category_id:       product?.categoryId ?? "",
+        variants: [
+          {
+            variant_label:     "Default",
+            size:              "100ml",
+            custom_size_ml:    "",
+            packaging:         "full_bottle",
+            edition:           "standard",
+            sku:               "",
+            barcode:           "",
+            mrp:               "",
+            sale_price:        parseFloat(product?.price ?? "0") || "",
+            cost_price:        "",
+            stock_quantity:    product?.stock ?? "",
+            reorder_threshold: "",
+            weight_grams:      "",
+            length_cm:         "",
+            width_cm:          "",
+            height_cm:         "",
+            active:            true,
+          },
+        ],
+      };
+
+  const buildPayload = (data: FullProductFormValues, extra?: object) => ({
+    name:        data.title,
+    description: data.full_description || data.short_description,
+    price:       Number(data.variants?.[0]?.sale_price) || 0,
+    stock:       data.variants?.reduce((s, v) => s + (Number(v.stock_quantity) || 0), 0) ?? 0,
+    categoryId:  data.category_id || undefined,
+    images:      data.gallery_images?.map((g) => g.url).filter(Boolean),
+    metadata:    data,
+    ...extra,
+  });
+
+  const handleSaveChanges = async (data: FullProductFormValues) => {
+    try {
+      await productsApi.updateProduct(id, buildPayload(data) as any);
+      toast.success("Changes saved.");
+    } catch (err: any) {
+      toast.error("Failed to save", err?.message ?? "Please try again.");
+    }
+  };
+
+  const handleSubmit = async (data: FullProductFormValues) => {
+    try {
+      await productsApi.updateProduct(id, buildPayload(data, { status: "pending_review" }) as any);
+      toast.success("Re-submitted for review.");
+      router.push("/products");
+    } catch (err: any) {
+      toast.error("Submission failed", err?.message ?? "Please try again.");
+    }
+  };
+
+  // Negative margin escapes the DashboardLayout's p-6, giving the form full width/height
   return (
-    <div>
-      <PageHeader
-        title={isLoading ? "Edit Product" : `Edit: ${product?.name ?? ""}`}
-        description="Update your product details."
-        backHref="/products"
+    <div className="-m-6">
+      <ProductListingForm
+        mode="edit"
+        productId={id}
+        defaultValues={defaultValues}
+        onSaveDraft={async () => {}}
+        onSubmit={handleSubmit}
+        onSaveChanges={handleSaveChanges}
       />
-
-      <div className="max-w-2xl">
-        <Card>
-          <CardHeader>
-            <CardTitle className="font-display text-xl">Product Details</CardTitle>
-            <CardDescription>
-              Changes are saved immediately and reflected on the marketplace.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-5">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="space-y-2">
-                    <Skeleton className="h-4 w-24" />
-                    <Skeleton className="h-9 w-full" />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <ProductForm
-                mode="edit"
-                defaultValues={defaultValues}
-                onSubmit={handleSubmit}
-                isSubmitting={isUpdating}
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
