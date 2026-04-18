@@ -1,0 +1,552 @@
+<!doctype html>
+<html lang="en" data-palette="noir" data-motion="full">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Insens — Perfume as Punctuation</title>
+<meta name="description" content="An independent fragrance house that believes every scent should leave a mark." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,200..900;1,9..144,200..900&family=Inter+Tight:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="brand">Insens<em>.</em></div>
+  <div class="middle">
+    <a data-hover href="#collection">Collection</a>
+    <a data-hover href="#anatomy">Discovery</a>
+    <a data-hover href="#archive">The Archive</a>
+    <a data-hover href="#ritual">Journal</a>
+  </div>
+  <div class="right">
+    <a data-hover class="cart" href="#finale">Bag — 0</a>
+  </div>
+</nav>
+
+<main id="app">
+
+  <!-- ── HERO ── -->
+  <section class="hero">
+    <div class="hero-meta">
+      <div class="cell">
+        <span class="eyebrow k">Collection</span>
+        <div class="v">No. I — Noir Absolu</div>
+      </div>
+      <div class="cell">
+        <span class="eyebrow k">Season</span>
+        <div class="v">Autumn / Winter 2024</div>
+      </div>
+      <div class="cell">
+        <span class="eyebrow k">Character</span>
+        <div class="v">Deep. Resinous. Enduring.</div>
+      </div>
+      <div class="cell">
+        <span class="eyebrow k">Volume</span>
+        <div class="v">50 ml — 100 ml</div>
+      </div>
+    </div>
+
+    <div class="hero-stage">
+      <div class="hero-type">
+        <span class="line reveal-mask"><span>Perfume</span></span>
+        <span class="line reveal-mask"><span>as <em>Punctu</em></span></span>
+        <span class="line reveal-mask"><span><em>ation</em><span class="amber">.</span></span></span>
+        <p class="sub reveal">An independent fragrance house that believes every scent should leave a mark.</p>
+      </div>
+
+      <div class="hero-bottle">
+        <svg viewBox="0 0 180 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+          <!-- Cap -->
+          <rect x="65" y="0" width="50" height="26" rx="4" fill="currentColor" opacity="0.55"/>
+          <rect x="68" y="4" width="44" height="18" rx="2" fill="currentColor" opacity="0.1"/>
+          <!-- Neck collar -->
+          <rect x="62" y="26" width="56" height="10" rx="2" fill="currentColor" opacity="0.35"/>
+          <!-- Neck -->
+          <rect x="72" y="36" width="36" height="55" rx="3" fill="currentColor" opacity="0.14"/>
+          <rect x="76" y="36" width="14" height="55" rx="2" fill="currentColor" opacity="0.06"/>
+          <!-- Shoulder -->
+          <path d="M48 91 Q48 106 42 118 L38 130 L142 130 L138 118 Q132 106 132 91 Z" fill="currentColor" opacity="0.13"/>
+          <!-- Body -->
+          <rect x="38" y="130" width="104" height="280" rx="8" fill="currentColor" opacity="0.12"/>
+          <!-- Body left sheen -->
+          <rect x="42" y="135" width="18" height="270" rx="6" fill="white" opacity="0.035"/>
+          <!-- Label -->
+          <rect x="50" y="195" width="80" height="130" rx="3" fill="currentColor" opacity="0.07"/>
+          <line x1="50" y1="210" x2="130" y2="210" stroke="currentColor" stroke-width="0.5" opacity="0.2"/>
+          <line x1="50" y1="310" x2="130" y2="310" stroke="currentColor" stroke-width="0.5" opacity="0.2"/>
+          <text x="90" y="258" text-anchor="middle" fill="currentColor" opacity="0.5" font-family="Fraunces, Georgia, serif" font-size="15" font-style="italic" letter-spacing="0.5">Insens.</text>
+          <text x="90" y="278" text-anchor="middle" fill="currentColor" opacity="0.28" font-family="JetBrains Mono, monospace" font-size="7" letter-spacing="3">NOIR ABSOLU</text>
+          <text x="90" y="298" text-anchor="middle" fill="currentColor" opacity="0.18" font-family="JetBrains Mono, monospace" font-size="6" letter-spacing="2">EAU DE PARFUM</text>
+          <!-- Bottom base -->
+          <ellipse cx="90" cy="410" rx="52" ry="9" fill="currentColor" opacity="0.07"/>
+          <rect x="38" y="402" width="104" height="8" rx="4" fill="currentColor" opacity="0.09"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="hero-foot">
+      <a class="btn primary" data-hover href="#collection">
+        <span class="dot"></span>
+        Explore Collection
+      </a>
+      <a class="btn" data-hover href="#finale">
+        Begin Your Ritual
+      </a>
+      <div class="scrollhint">
+        <span class="eyebrow">Scroll</span>
+        <div class="dash"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MARQUEE ── -->
+  <div class="marquee">
+    <div class="marquee-track">
+      <span>Oud</span><span class="dot"> ✦ </span>
+      <span><em>Rose</em></span><span class="dot"> ✦ </span>
+      <span>Amber</span><span class="dot"> ✦ </span>
+      <span><em>Vetiver</em></span><span class="dot"> ✦ </span>
+      <span>Sandalwood</span><span class="dot"> ✦ </span>
+      <span><em>Bergamot</em></span><span class="dot"> ✦ </span>
+      <span>Iris</span><span class="dot"> ✦ </span>
+      <span><em>Saffron</em></span><span class="dot"> ✦ </span>
+      <span>Oud</span><span class="dot"> ✦ </span>
+      <span><em>Rose</em></span><span class="dot"> ✦ </span>
+      <span>Amber</span><span class="dot"> ✦ </span>
+      <span><em>Vetiver</em></span><span class="dot"> ✦ </span>
+      <span>Sandalwood</span><span class="dot"> ✦ </span>
+      <span><em>Bergamot</em></span><span class="dot"> ✦ </span>
+      <span>Iris</span><span class="dot"> ✦ </span>
+      <span><em>Saffron</em></span><span class="dot"> ✦ </span>
+    </div>
+  </div>
+  <div class="marquee">
+    <div class="marquee-track rev">
+      <span><em>Jasmine</em></span><span class="dot"> ✦ </span>
+      <span>Musk</span><span class="dot"> ✦ </span>
+      <span><em>Cedar</em></span><span class="dot"> ✦ </span>
+      <span>Neroli</span><span class="dot"> ✦ </span>
+      <span><em>Patchouli</em></span><span class="dot"> ✦ </span>
+      <span>Labdanum</span><span class="dot"> ✦ </span>
+      <span><em>Aldehydes</em></span><span class="dot"> ✦ </span>
+      <span>Cardamom</span><span class="dot"> ✦ </span>
+      <span><em>Jasmine</em></span><span class="dot"> ✦ </span>
+      <span>Musk</span><span class="dot"> ✦ </span>
+      <span><em>Cedar</em></span><span class="dot"> ✦ </span>
+      <span>Neroli</span><span class="dot"> ✦ </span>
+      <span><em>Patchouli</em></span><span class="dot"> ✦ </span>
+      <span>Labdanum</span><span class="dot"> ✦ </span>
+      <span><em>Aldehydes</em></span><span class="dot"> ✦ </span>
+      <span>Cardamom</span><span class="dot"> ✦ </span>
+    </div>
+  </div>
+
+  <!-- ── COLLECTION ── -->
+  <section id="collection">
+
+    <!-- Chapter I -->
+    <article class="chapter reveal">
+      <div class="side">
+        <div>
+          <div class="numeral">I</div>
+          <div class="name">Noir<br><em>Absolu</em></div>
+          <ul class="accords">
+            <li><span class="idx">01</span><span class="nm">Oud Somalien</span><span class="pct">35%</span></li>
+            <li><span class="idx">02</span><span class="nm">Labdanum</span><span class="pct">25%</span></li>
+            <li><span class="idx">03</span><span class="nm">Ambre Gris</span><span class="pct">24%</span></li>
+            <li><span class="idx">04</span><span class="nm">Musc Blanc</span><span class="pct">16%</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="pricing">
+            <span class="price">from $185</span>
+            <div class="sizes">
+              <span class="size active">15 ml</span>
+              <span class="size">50 ml</span>
+              <span class="size">100 ml</span>
+            </div>
+          </div>
+          <a class="btn" data-hover href="#finale" style="margin-top:24px">
+            <span class="dot"></span>
+            Add to Bag
+          </a>
+        </div>
+      </div>
+      <div class="visual">
+        <div class="bottle">
+          <svg viewBox="0 0 180 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:55%;opacity:0.7;">
+            <rect x="65" y="0" width="50" height="26" rx="4" fill="currentColor" opacity="0.55"/>
+            <rect x="62" y="26" width="56" height="10" rx="2" fill="currentColor" opacity="0.35"/>
+            <rect x="72" y="36" width="36" height="55" rx="3" fill="currentColor" opacity="0.14"/>
+            <path d="M48 91 Q48 106 42 118 L38 130 L142 130 L138 118 Q132 106 132 91 Z" fill="currentColor" opacity="0.13"/>
+            <rect x="38" y="130" width="104" height="280" rx="8" fill="currentColor" opacity="0.18"/>
+            <rect x="50" y="195" width="80" height="130" rx="3" fill="currentColor" opacity="0.1"/>
+            <text x="90" y="258" text-anchor="middle" fill="currentColor" opacity="0.6" font-family="Fraunces,Georgia,serif" font-size="15" font-style="italic">Insens.</text>
+            <text x="90" y="278" text-anchor="middle" fill="currentColor" opacity="0.35" font-family="JetBrains Mono,monospace" font-size="7" letter-spacing="3">NOIR ABSOLU</text>
+            <ellipse cx="90" cy="410" rx="52" ry="9" fill="currentColor" opacity="0.07"/>
+          </svg>
+        </div>
+      </div>
+    </article>
+
+    <!-- Chapter II -->
+    <article class="chapter reveal">
+      <div class="visual">
+        <div class="bottle">
+          <svg viewBox="0 0 180 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:55%;opacity:0.7;">
+            <rect x="65" y="0" width="50" height="26" rx="4" fill="currentColor" opacity="0.55"/>
+            <rect x="62" y="26" width="56" height="10" rx="2" fill="currentColor" opacity="0.35"/>
+            <rect x="72" y="36" width="36" height="55" rx="3" fill="currentColor" opacity="0.14"/>
+            <path d="M48 91 Q48 106 42 118 L38 130 L142 130 L138 118 Q132 106 132 91 Z" fill="currentColor" opacity="0.13"/>
+            <rect x="38" y="130" width="104" height="280" rx="8" fill="currentColor" opacity="0.18"/>
+            <rect x="50" y="195" width="80" height="130" rx="3" fill="currentColor" opacity="0.1"/>
+            <text x="90" y="258" text-anchor="middle" fill="currentColor" opacity="0.6" font-family="Fraunces,Georgia,serif" font-size="15" font-style="italic">Insens.</text>
+            <text x="90" y="278" text-anchor="middle" fill="currentColor" opacity="0.35" font-family="JetBrains Mono,monospace" font-size="7" letter-spacing="3">ROSE SOIR</text>
+            <ellipse cx="90" cy="410" rx="52" ry="9" fill="currentColor" opacity="0.07"/>
+          </svg>
+        </div>
+      </div>
+      <div class="side">
+        <div>
+          <div class="numeral">II</div>
+          <div class="name">Rose<br><em>Soir</em></div>
+          <ul class="accords">
+            <li><span class="idx">01</span><span class="nm">Rose de Mai</span><span class="pct">40%</span></li>
+            <li><span class="idx">02</span><span class="nm">Safran</span><span class="pct">25%</span></li>
+            <li><span class="idx">03</span><span class="nm">Santal</span><span class="pct">22%</span></li>
+            <li><span class="idx">04</span><span class="nm">Musc Doux</span><span class="pct">13%</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="pricing">
+            <span class="price">from $165</span>
+            <div class="sizes">
+              <span class="size active">15 ml</span>
+              <span class="size">50 ml</span>
+              <span class="size">100 ml</span>
+            </div>
+          </div>
+          <a class="btn" data-hover href="#finale" style="margin-top:24px">
+            <span class="dot"></span>
+            Add to Bag
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <!-- Chapter III -->
+    <article class="chapter reveal">
+      <div class="side">
+        <div>
+          <div class="numeral">III</div>
+          <div class="name">Brume<br><em>Blanche</em></div>
+          <ul class="accords">
+            <li><span class="idx">01</span><span class="nm">Néroli</span><span class="pct">32%</span></li>
+            <li><span class="idx">02</span><span class="nm">Iris Pâle</span><span class="pct">28%</span></li>
+            <li><span class="idx">03</span><span class="nm">Musc Blanc</span><span class="pct">26%</span></li>
+            <li><span class="idx">04</span><span class="nm">Aldéhydes</span><span class="pct">14%</span></li>
+          </ul>
+        </div>
+        <div>
+          <div class="pricing">
+            <span class="price">from $175</span>
+            <div class="sizes">
+              <span class="size active">15 ml</span>
+              <span class="size">50 ml</span>
+              <span class="size">100 ml</span>
+            </div>
+          </div>
+          <a class="btn" data-hover href="#finale" style="margin-top:24px">
+            <span class="dot"></span>
+            Add to Bag
+          </a>
+        </div>
+      </div>
+      <div class="visual">
+        <div class="bottle">
+          <svg viewBox="0 0 180 460" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:55%;opacity:0.7;">
+            <rect x="65" y="0" width="50" height="26" rx="4" fill="currentColor" opacity="0.55"/>
+            <rect x="62" y="26" width="56" height="10" rx="2" fill="currentColor" opacity="0.35"/>
+            <rect x="72" y="36" width="36" height="55" rx="3" fill="currentColor" opacity="0.14"/>
+            <path d="M48 91 Q48 106 42 118 L38 130 L142 130 L138 118 Q132 106 132 91 Z" fill="currentColor" opacity="0.13"/>
+            <rect x="38" y="130" width="104" height="280" rx="8" fill="currentColor" opacity="0.18"/>
+            <rect x="50" y="195" width="80" height="130" rx="3" fill="currentColor" opacity="0.1"/>
+            <text x="90" y="258" text-anchor="middle" fill="currentColor" opacity="0.6" font-family="Fraunces,Georgia,serif" font-size="15" font-style="italic">Insens.</text>
+            <text x="90" y="278" text-anchor="middle" fill="currentColor" opacity="0.35" font-family="JetBrains Mono,monospace" font-size="7" letter-spacing="3">BRUME BLANCHE</text>
+            <ellipse cx="90" cy="410" rx="52" ry="9" fill="currentColor" opacity="0.07"/>
+          </svg>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <!-- ── ANATOMY ── -->
+  <section class="anatomy" id="anatomy">
+    <h2 class="title reveal">The <em>Anatomy</em><br>of a Scent.</h2>
+    <div class="pyramid">
+      <div class="row" style="--w: 22%">
+        <span class="label">Top</span>
+        <div class="notes">Bergamot, <em>Cardamom</em>, Aldehydes</div>
+        <div class="bar"></div>
+      </div>
+      <div class="row" style="--w: 55%">
+        <span class="label">Heart</span>
+        <div class="notes"><em>Rose</em>, Oud, Iris</div>
+        <div class="bar"></div>
+      </div>
+      <div class="row" style="--w: 88%">
+        <span class="label">Base</span>
+        <div class="notes">Amber, <em>Sandalwood</em>, Musk</div>
+        <div class="bar"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ARCHIVE ── -->
+  <section class="archive" id="archive">
+    <div class="hdr">
+      <h2>As Told by<br>the <em>Press</em></h2>
+      <div class="masthead">The Insens<br>Review — Vol. IV</div>
+      <div class="edition">Edition No. 04<br>Autumn 2024</div>
+    </div>
+    <div class="archive-grid">
+      <div class="clipping big reveal">
+        <div class="pub">Vogue</div>
+        <div class="date">October 2024</div>
+        <div class="quote">"The most quietly subversive fragrance house of the decade. Each bottle is a full stop in a world that never <em>pauses</em>."</div>
+        <div class="byline">— Céleste Morin, Beauty Director</div>
+      </div>
+      <div class="clipping reveal">
+        <div class="pub">FT Weekend</div>
+        <div class="date">September 2024</div>
+        <div class="rating">★★★★★</div>
+        <div class="quote">"Exceptional sillage. A scent that precedes you into every room and remains long after you've <em>left</em>."</div>
+        <div class="byline">— James Whitfield</div>
+      </div>
+      <div class="clipping reveal">
+        <div class="pub">Wallpaper*</div>
+        <div class="date">August 2024</div>
+        <div class="quote">"Insens understands that silence is its own perfume. These are scents that <em>speak</em> in whispers."</div>
+        <div class="byline">— Yuki Tanaka, Design Ed.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── RITUAL ── -->
+  <section class="ritual" id="ritual">
+    <div class="left">
+      <div class="eyebrow">The Journal</div>
+      <h2>The Ritual<br>of Wearing<br><em>Well</em></h2>
+    </div>
+    <div class="right">
+      <p class="lede">Fragrance is not decoration. It is the invisible layer of a considered life — the first impression that arrives before you do, the last memory that lingers after you've gone.</p>
+      <p><span class="dropcap">W</span>e founded Insens on a single conviction: that perfume is punctuation. It marks the beginning of a day, the arrival at a table, the quiet moment before sleep. It is not cosmetic. It is compositional.</p>
+      <p>Every formula we release begins not in a laboratory but in a room — a specific room, at a specific hour, under a particular quality of light. Noir Absolu was composed at dusk in a Marrakech riad. Rose Soir emerged from the memory of a garden at midnight. Brume Blanche was written in a coastal fog at dawn.</p>
+      <div class="pullquote">"We do not make perfume. We make the memory of a room you have never visited but always wanted to return to."</div>
+      <p class="footnote">— Founder's Note, Vol. I</p>
+      <p>Our perfumers work in dialogue — between tradition and instinction, between restraint and excess. The result is a collection that refuses to shout, but cannot be ignored. A collection that rewards the patient, the attentive, the those who understand that the most powerful things move slowly.</p>
+    </div>
+  </section>
+
+  <!-- ── SPECIMEN ── -->
+  <section class="specimen" id="specimen">
+    <div class="hdr">
+      <h2>Specimen<br><em>Notes</em></h2>
+      <p class="eyebrow">Technical Composition</p>
+    </div>
+    <div class="grid">
+      <div class="cell col-8 reveal">
+        <span class="num">01 — Sillage</span>
+        <div class="big"><em>Excep</em>tional</div>
+        <div class="desc">Our formulas are composed with a projection radius that announces your presence before words can. Tested at 3–4 metres in controlled conditions.</div>
+        <div class="sillage"></div>
+      </div>
+      <div class="cell col-4 reveal">
+        <span class="num">02 — Longevity</span>
+        <div class="big">12<em>+</em></div>
+        <div class="desc">Hours of detectable wear on skin. Up to 48 hours on textiles and hair.</div>
+        <div class="longevity">
+          <span class="on"></span><span class="on"></span><span class="on"></span>
+          <span class="on"></span><span class="on"></span><span class="on"></span>
+          <span class="on"></span><span class="on"></span><span class="on"></span>
+          <span class="on"></span><span class="on"></span><span class="on"></span>
+          <span></span><span></span>
+        </div>
+      </div>
+      <div class="cell col-6 reveal">
+        <span class="num">03 — Worn In</span>
+        <div class="cities">
+          <span class="city">Paris<sup>FR</sup></span>
+          <span class="city">Tokyo<sup>JP</sup></span>
+          <span class="city">New York<sup>US</sup></span>
+          <span class="city">Dubai<sup>AE</sup></span>
+          <span class="city">London<sup>GB</sup></span>
+          <span class="city">Milan<sup>IT</sup></span>
+        </div>
+      </div>
+      <div class="cell col-6 reveal">
+        <span class="num">04 — Concentration</span>
+        <div class="big">28<em>%</em></div>
+        <div class="desc">Perfume concentration. Above industry standard Eau de Parfum (15–20%) for maximum depth and character.</div>
+      </div>
+      <div class="cell col-4 reveal">
+        <span class="num">05 — Accords</span>
+        <div class="big"><em>320</em>+</div>
+        <div class="desc">Raw materials in our perfumers' palette.</div>
+      </div>
+      <div class="cell col-4 reveal">
+        <span class="num">06 — Batch</span>
+        <div class="big">2<em>k</em></div>
+        <div class="desc">Maximum units per fragrance release. Always small. Always intentional.</div>
+      </div>
+      <div class="cell col-4 reveal">
+        <span class="num">07 — Aged</span>
+        <div class="big">6<em>mo</em></div>
+        <div class="desc">Maceration period before each formula is approved for release.</div>
+      </div>
+      <div class="cell col-12 reveal">
+        <span class="num">08 — Philosophy</span>
+        <div class="big" style="font-size:clamp(24px,3.5vw,52px);">"We compose in silence. <em>We release with intention.</em>"</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FINALE ── -->
+  <section class="finale" id="finale">
+    <p class="eyebrow">Your Ritual Awaits</p>
+    <h2>Begin <em>Your</em><br>Ritual<span style="color:var(--accent)">.</span></h2>
+    <div class="cta-row">
+      <a class="btn primary" data-hover href="#collection">
+        <span class="dot"></span>
+        Shop the Collection
+      </a>
+      <a class="btn" data-hover href="#anatomy">
+        Discover Your Scent
+      </a>
+    </div>
+    <div class="trust">
+      <div class="t">
+        <div class="v">2019</div>
+        <div class="k">Founded</div>
+      </div>
+      <div class="t">
+        <div class="v">12</div>
+        <div class="k">Fragrances</div>
+      </div>
+      <div class="t">
+        <div class="v">60+</div>
+        <div class="k">Countries</div>
+      </div>
+      <div class="t">
+        <div class="v">4.9 ★</div>
+        <div class="k">Average Rating</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="col">
+      <h4>Insens.</h4>
+      <p style="font-family:var(--serif);font-style:italic;font-size:17px;line-height:1.5;opacity:0.6;max-width:280px;">
+        An independent fragrance house. Composed with intention. Released with restraint.
+      </p>
+    </div>
+    <div class="col">
+      <h4>Collection</h4>
+      <a data-hover href="#collection">Noir Absolu</a>
+      <a data-hover href="#collection">Rose Soir</a>
+      <a data-hover href="#collection">Brume Blanche</a>
+      <a data-hover href="#collection">Discovery Set</a>
+    </div>
+    <div class="col">
+      <h4>Discover</h4>
+      <a data-hover href="#anatomy">The Pyramid</a>
+      <a data-hover href="#archive">Press</a>
+      <a data-hover href="#ritual">Journal</a>
+      <a data-hover href="#specimen">Composition</a>
+    </div>
+    <div class="col">
+      <h4>Journal</h4>
+      <a data-hover href="#">On Wearing Oud</a>
+      <a data-hover href="#">The Art of Layering</a>
+      <a data-hover href="#">Seasonal Notes</a>
+      <a data-hover href="#">Perfumer's Diary</a>
+    </div>
+    <div class="col">
+      <h4>Connect</h4>
+      <a data-hover href="#">Instagram</a>
+      <a data-hover href="#">Newsletter</a>
+      <a data-hover href="#">Stockists</a>
+      <a data-hover href="#">Contact</a>
+    </div>
+    <div class="wordmark">Insens<em>.</em></div>
+    <div class="legal">
+      <span>© 2024 Insens Ltd. All rights reserved.</span>
+      <div style="display:flex;gap:24px;">
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+        <a href="#">Cookies</a>
+      </div>
+    </div>
+  </footer>
+
+</main>
+
+<!-- Tweaks panel -->
+<div class="tweaks-panel" id="tweaks">
+  <h4>Tweaks</h4>
+  <div class="group">
+    <label>Palette</label>
+    <div class="opts" data-tw="palette">
+      <button class="opt active" data-v="noir">Noir</button>
+      <button class="opt" data-v="bone">Bone</button>
+      <button class="opt" data-v="clinical">Clinical</button>
+    </div>
+  </div>
+  <div class="group">
+    <label>Type Pairing</label>
+    <div class="opts" data-tw="type">
+      <button class="opt active" data-v="editorial">Editorial</button>
+      <button class="opt" data-v="swiss">Swiss</button>
+      <button class="opt" data-v="monodisp">Mono</button>
+    </div>
+  </div>
+  <div class="group">
+    <label>Motion</label>
+    <div class="opts" data-tw="motion">
+      <button class="opt active" data-v="full">Full</button>
+      <button class="opt" data-v="reduced">Reduced</button>
+    </div>
+  </div>
+  <div class="group">
+    <label>Accent</label>
+    <div class="opts" data-tw="accent">
+      <button class="opt active" data-v="amber" style="background:#c89b5a"></button>
+      <button class="opt" data-v="rust" style="background:#b1452a"></button>
+      <button class="opt" data-v="moss" style="background:#6a6a3a"></button>
+      <button class="opt" data-v="ink" style="background:#222;color:#fff"></button>
+      <button class="opt" data-v="orchid" style="background:#9d6aa0"></button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const TWEAK_DEFAULTS = {
+    "palette": "bone",
+    "type": "editorial",
+    "motion": "reduced",
+    "accent": "orchid"
+  };
+</script>
+<script src="interactions.js"></script>
+
+</body>
+</html>
